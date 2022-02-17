@@ -1,0 +1,48 @@
+h1{
+  outline-color: fuchsia;
+  outline-style: ridge;
+  color: white;
+  justify-content: left;
+  text-align: center;
+  margin: 0 auto;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+.logo{
+  padding-left: 100px;
+  font-family: 'Major Mono Display', monospace;
+  text-align: left;
+}
+body{
+  background: url("/assets/images/binding_dark.png");
+  background-size: auto;
+}
+p{
+  background-color: rgba(255,200,0,1)
+}
+ul{
+  text-align: center;
+}
+li {
+  display: inline;
+  padding: 25px;
+}
+footer{
+  text-align: center;
+  color: #eeeeee;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 30px;
+}
+
+#name {
+  padding-left: 100px;
+}
+#content{
+  text-align: center;
+  width: 800px;
+  color: #eeeeee;
+  margin: 0 auto;
+}

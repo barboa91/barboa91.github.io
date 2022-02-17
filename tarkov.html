@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <head>
 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script><!-- This is for jQuery -->
 	<style>
 		@font-face {
-			font-family: Bender; 
+			font-family: Bender;
 			src: url("/assets/fonts/Bender/font.woff");
 
 		}
@@ -25,6 +24,7 @@
 			text-align: center;
 			font-size: 35px;
 			display: block;
+			 text-decoration: none;
 			color: rgba(0, 0, 0, 1.0);
 		}
 
@@ -65,7 +65,7 @@
 
 	const maps = ["woods","customs","factory","reserve","lighthouse","shoreline","labs"];
 	var mapNum;
-	// maps 
+	// maps
 	//woods
 	//customs
 	//factory
@@ -73,7 +73,9 @@
 	//lighthouse
 	//shoreline
 	//labs
-
+document.querySelector(".mapImage").addEventListener("click",pickMap);
+document.querySelector(".mapPick").addEventListener("click",pickMap);
+/* OLD jquery
 	$(".mapPick").click(function (){
 
 
@@ -85,7 +87,7 @@
 	$(".mapImage").click(function(){
 		pickMap();
 	})
-
+*/
 
 	function pickMap(){
 
@@ -99,14 +101,14 @@
 			document.getElementById("mapImage").style.color = ("rgba(230,228,211,255)");
 		}
 		else{
-			document.getElementById("mapImage").style.color = ("rgba(0,0,0,255)");	
+			document.getElementById("mapImage").style.color = ("rgba(0,0,0,255)");
 		}
 
 
 
 	}
-	
+
 
 </script>
-	
+
 </body>
