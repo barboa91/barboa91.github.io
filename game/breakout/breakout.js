@@ -24,7 +24,7 @@ let draw = () =>{
         if(x > paddleX && x < paddleX + paddleWidth) {
             dy = -dy;
             faster();
-        }else{
+        }else if( (y + dy) > canvas.height-ballradius){
         gameOver();
         }
     }
