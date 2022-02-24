@@ -7,10 +7,11 @@ body{
     text-align: center;
     width: 100%;
     margin: 0 auto;
+    background-color: black;
     
 }
 canvas { 
-    background: #eee;
+    background: rgb(41, 41, 41);
     width:  80%;
     height: 100%;
 
