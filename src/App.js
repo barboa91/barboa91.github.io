@@ -1,7 +1,9 @@
 import logo from './logo.svg';
 import './App.css';
 import Navbar from './components/Navbar';
+import Skills from './components/Skills';
 import Socials from './components/Socials';
+import Splash from './pages/Splash';
 import { Link, Route, Routes } from 'react-router-dom';
 
 
@@ -9,20 +11,17 @@ import { Link, Route, Routes } from 'react-router-dom';
 function App() {
   return (
           <div className="App">
-              <div className='biglongdiv'> some stuff</div>        
-
-
-            <div display="flex" text-align="center">
-              <Socials/>
-            </div>
-            <Navbar/>
-            <Link to="/">TEST</Link>
-              <div id="content">
-                <div id="aboutmecontent">
-                  pippqiwjdpqjwidqwpjdqwjpid
-                </div>
-              </div>   
-            <footer>Copyright &copy; Alex Barbosa <br/>Built with <img src={logo} className="App-logo" alt="logo"/></footer>
+            <Routes>
+              <Route path = "/" element = {<Splash/>}></Route>
+              <Route path = "/socials" element = {<Socials/>}></Route>
+              
+            </Routes>
+            <footer>
+              
+            <Skills/>
+            <div>Copyright &copy; Alex Barbosa </div>
+              
+              </footer>
           </div>
   );
 }

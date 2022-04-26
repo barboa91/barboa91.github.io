@@ -7,7 +7,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   height: 100%;
 }
-html{
+
+html {
   height: 100%;
 }
 
@@ -15,10 +16,12 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
-#root{
+
+#root {
   height: 100%;
 }
-h1{
+
+h1 {
   outline-color: fuchsia;
   outline-style: ridge;
   color: white;
@@ -29,70 +32,69 @@ h1{
   padding-bottom: 40px;
 }
 
-.NameLogo{
+.NameLogo {
   font-family: 'Major Mono Display', monospace;
   text-align: center;
   font-size: 4em;
   padding-top: 50px;
-  
+
 }
-body{
+
+body {
   background: url("/public/images/binding_dark.png");
   background-size: auto;
 }
-p{
-  background-color: rgba(255,200,0,1)
+
+p {
+  background-color: rgba(255, 200, 0, 1)
 }
-ul{
-  text-align: center;
-  width: 100%;
-  margin: 0 auto;
-  padding-inline-start: 0px;
-}
-li {
-  width: 33%;
-  display: inline;
-  
-  padding: 25px;
-  border: 2px solid red;
-}
-footer{
+
+
+
+
+
+footer {
   text-align: center;
   color: #eeeeee;
   position: fixed;
   bottom: 0;
+  font-size: small;
   width: 100%;
-  padding-bottom: 30px;
+  padding-bottom: 5px;
 }
-.Socials{
+
+.Socials {
   display: flex;
   width: 100%;
   height: auto;
   text-align: center;
   justify-content: center;
 }
-.Social{
+
+.Social {
   text-align: center;
-  src:"./images/Octicons-mark-github.svg"
+  src: "./components/images/Octicons-mark-github.svg"
 }
-.LogoSocial{
+
+.LogoSocial {
   height: 30vmin;
   padding: 50px;
   z-index: 1;
   display: block;
-  
+
   pointer-events: none;
 }
-.NameSocial{
+
+.NameSocial {
   text-align: center;
 }
 
-#name {
-  padding-left: 100px;
-}
-#content{
+
+
+#content {
   text-align: center;
   width: 800px;
   color: #eeeeee;
   margin: 0 auto;
 }
+

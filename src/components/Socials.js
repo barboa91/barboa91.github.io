@@ -8,7 +8,7 @@ const Socials = () =>{
 
 
             <div className="Social">
-                <Link to="https://github.com/barboa91"><img className="LogoSocial"  alt="GitHub"/></Link>
+                <Link to="https://github.com/barboa91"><img className="LogoSocial" src={github}  alt="GitHub"/></Link>
             </div>
             <div className ="NameLogo">Alex<br/> BarbosA</div>
             

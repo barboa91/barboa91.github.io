@@ -1,0 +1,16 @@
+.nav-links {
+    text-align: right;
+    margin: 0 auto;
+    padding-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap:5%;
+  }
+
+.nav-item {
+    display: inline;
+    border: 2px solid red;
+  }
+  a {
+      color: aliceblue;
+  }
