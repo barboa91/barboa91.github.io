@@ -4,7 +4,7 @@ import '../style/nav.css'
 
 const Navbar = () =>{
     return (
-
+        <div>
         <nav className="nav-links">
             
                 <div className="nav-item"><Link to="/socials" >About Me</Link></div>
@@ -14,6 +14,7 @@ const Navbar = () =>{
                 <div className="nav-item"><a href="mailto:alex.andrew.barbosa@gmail.com">e-Mail</a></div>
         
         </nav>
+        </div>
     )
 }
 export default Navbar

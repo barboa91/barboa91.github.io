@@ -4,121 +4,152 @@
     display: flex;
     flex-wrap: wrap;
     width: 100%;
-    height: 50px;
+    height: 100px;
     justify-content: space-around;
-
-
+    align-items: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill1{
     background-image: url('../assets/logos/css-3.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 
 }
 .skill2{
     background: url('../assets/logos/html-1.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
+    background-position: center;
     background-repeat: no-repeat;
-    height: auto;
+    transition:all 0.5s ease;
+    pointer-events: none
+
+
 }
 .skill3{
     background: url('../assets/logos/logo-javascript.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
 }
 .skill4{
     background: url('../assets/logos/nodejs-icon.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill5{
     background: url('../assets/logos/react-2.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill6{
     background: url('../assets/logos/redux.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill7{
     background: url('../assets/logos/vue-js-1.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+
+    pointer-events: none
 }
 .skill8{
     background: url('../assets/logos/mongodb-icon-1.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill9{
     background: url('../assets/logos/postgresql.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill10{
     background: url('../assets/logos/python-5.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill11{
     background: url('../assets/logos/microsoft-windows-22.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill12{
     background: url('../assets/logos/mac-os-2.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill13{
     background: url('../assets/logos/ubuntu-icon.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
 .skill14{
     background: url('../assets/logos/linux-tux-1.svg');
     width: 50px;
-    height: 50px;
+    height: 100%;
     background-size: contain;
     background-repeat: no-repeat;
-    height: auto;
+    background-position: center;
+    transition:all 0.5s ease;
+    pointer-events: none
 }
