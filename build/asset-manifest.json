@@ -1,19 +1,32 @@
 {
   "files": {
-    "main.css": "/static/css/main.3b2b39c3.css",
-    "main.js": "/static/js/main.434f0a3c.js",
+    "main.css": "/static/css/main.ab7c3e25.css",
+    "main.js": "/static/js/main.ee38259b.js",
     "static/js/787.7cb2e3e1.chunk.js": "/static/js/787.7cb2e3e1.chunk.js",
     "static/media/binding_dark.png": "/static/media/binding_dark.3126f02bb55dea8b0ce0.png",
-    "static/media/logo.svg": "/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "static/media/linux-tux-1.svg": "/static/media/linux-tux-1.25037f3bba2fb07bce71.svg",
+    "static/media/postgresql.svg": "/static/media/postgresql.ae92b576b8ea41666538.svg",
+    "static/media/mac-os-2.svg": "/static/media/mac-os-2.1124c8ce88feb13b9b92.svg",
+    "static/media/react-2.svg": "/static/media/react-2.e68b35f4774979ae220b.svg",
+    "static/media/nodejs-icon.svg": "/static/media/nodejs-icon.615ffbea9529ca7047ed.svg",
+    "static/media/redux.svg": "/static/media/redux.0e4fb1c819ac4c060c92.svg",
+    "static/media/ubuntu-icon.svg": "/static/media/ubuntu-icon.e40441e54e6640537dda.svg",
+    "static/media/python-5.svg": "/static/media/python-5.e6d7dc739a91892bbf1f.svg",
+    "static/media/mongodb-icon-1.svg": "/static/media/mongodb-icon-1.1aca075d5cce0819fea7.svg",
+    "static/media/logo-javascript.svg": "/static/media/logo-javascript.00f3e5cf8bcf4ae623b3.svg",
     "static/media/Octicons-mark-github.svg": "/static/media/Octicons-mark-github.599e7f128113af7b8b09467b632225bb.svg",
     "static/media/linkedin-icon.svg": "/static/media/linkedin-icon.f10c9de5cd3d33321b434c21192b499d.svg",
     "index.html": "/index.html",
-    "main.3b2b39c3.css.map": "/static/css/main.3b2b39c3.css.map",
-    "main.434f0a3c.js.map": "/static/js/main.434f0a3c.js.map",
+    "static/media/css-3.svg": "/static/media/css-3.4e47c3122b8d2476a02f.svg",
+    "static/media/html-1.svg": "/static/media/html-1.f318c8b1d5945fa9adc8.svg",
+    "static/media/microsoft-windows-22.svg": "/static/media/microsoft-windows-22.4b4849633a68ebb30496.svg",
+    "static/media/vue-js-1.svg": "/static/media/vue-js-1.4921ee763e7954a01fa7.svg",
+    "main.ab7c3e25.css.map": "/static/css/main.ab7c3e25.css.map",
+    "main.ee38259b.js.map": "/static/js/main.ee38259b.js.map",
     "787.7cb2e3e1.chunk.js.map": "/static/js/787.7cb2e3e1.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.3b2b39c3.css",
-    "static/js/main.434f0a3c.js"
+    "static/css/main.ab7c3e25.css",
+    "static/js/main.ee38259b.js"
   ]
 }

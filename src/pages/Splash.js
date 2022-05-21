@@ -1,4 +1,4 @@
-import React  from "react";
+import React,{ useState }  from "react";
 import Navbar from "../components/Navbar";
 // import Skills from "../components/Skills";
 // import { Link } from "react-router-dom";
@@ -57,10 +57,6 @@ const Splash = () =>{
         "align-items":"center",
         "pointer-events": "none",
     }
-
-
-
-
     const highlight1=()=>{
         var ski = document.getElementsByClassName("skills-bar");
         Object.assign(ski[0].style, barbig);
@@ -161,31 +157,63 @@ const Splash = () =>{
         var box7 = document.getElementsByClassName("skill12");
         Object.assign(box7[0].style, styles1);
     }
-
+    const [aboutToggle,setAboutToggle] = useState([0,0,0,0])
     
     return (
-
-        <div className="splash-container">
-            <Navbar/>
-            <div className="splash-wrap">
-
-                <div className="splash-left">
-                    <div className='splash-welcome'>
-                        Hi, I'm
-                        Alex <br/>
-                        a Full Stack Software engineer.
-                    </div>      
-                 </div>
-                <div className="splash-right">
-                    <div className="project-squares">
-                        <div id="project1"onMouseEnter={ ()=>{ highlight1()} } onMouseOut={()=>unHighlight1() }>A</div>
-                        <div id="project2" onMouseEnter={ ()=>{ highlight2()} } onMouseOut={()=>unHighlight2() }>B</div>
-                        <div id="project3" onMouseEnter={ ()=>{ highlight3()} } onMouseOut={()=>unHighlight3() }>C</div>
-                        <div id="project4">D</div>
-                    </div>
-                 </div>
+      <div className="splash-container">
+        <Navbar />
+        <div className="splash-wrap">
+          <div className="splash-left">
+            <div className="splash-welcome">
+              Hi, I'm Alex <br />a Full Stack Software engineer.
             </div>
+          </div>
+          <div className="splash-right">
+            <div className="project-squares">
+            <div id="project1" onMouseOver={() => {highlight1();}} onMouseOut={() => unHighlight1()}>
+            {aboutToggle[0] === 0 ? 
+             <div id="proj1Image">
+                  <div className="projTitle">Polygon Destroyer</div>
+                  <div className="projBottom">
+                      <div className="projLinks">
+                        <a target="_blank" rel="noreferrer" href="https://bashful-respect.surge.sh/" className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([1,aboutToggle[1],aboutToggle[2],aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href="https://github.com/barboa91/Polygon-Destroyer" className="gitLink">Git</a>
+                      </div>
+                  </div>
+                </div>: 
+                <div id="proj1desc">
+                <div className="projTitle">Polygon Destroyer</div>
+                <div> This is my first project and one that I am most proud of. It is a video game in which the objective is to shoot lazers out of Jeremy's eyes and destroy yello rectangles. The only technology I used to create this is JavaScript HTML and CSS.</div>
+                <div className="projBottom">
+                    <div className="projLinks">
+                      <a target="_blank" rel="noreferrer" href="https://bashful-respect.surge.sh/" className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([0,aboutToggle[1],aboutToggle[2],aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href="https://github.com/barboa91/Polygon-Destroyer" className="gitLink">Git</a>
+                    </div>
+                </div>
+              </div>
+              }
+              </div>
+              <div
+                id="project2"
+                onMouseOver={() => {
+                  highlight2();
+                }}
+                onMouseOut={() => unHighlight2()}
+              >
+                B
+              </div>
+              <div
+                id="project3"
+                onMouseOver={() => {
+                  highlight3();
+                }}
+                onMouseOut={() => unHighlight3()}
+              >
+                C
+              </div>
+              <div id="project4">D</div>
+            </div>
+          </div>
         </div>
-    )
+      </div>
+    );
 }
 export default Splash

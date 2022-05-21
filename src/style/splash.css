@@ -52,6 +52,9 @@
     border: green 1px solid;
     box-shadow: rgba(255, 255, 255, 0.1) 0px 20px 25px -5px, rgba(255, 255, 255, 0.04) 0px 10px 10px -5px;
     margin-top: 20px;
+    position: relative;
+    border-radius: 2em;
+
 }
 #project2{
     height: 400px;
@@ -59,6 +62,7 @@
     border: red 1px solid;
     box-shadow: rgba(255, 255, 255, 0.1) 0px 20px 25px -5px, rgba(255, 255, 255, 0.04) 0px 10px 10px -5px;
     margin-top: 20px;
+    position: relative;
 
 }
 #project3{
@@ -66,6 +70,7 @@
     width: 49%;
     border: blue 1px solid;
     box-shadow: rgba(255, 255, 255, 0.1) 0px 20px 25px -5px, rgba(255, 255, 255, 0.04) 0px 10px 10px -5px;
+    position: relative;
     margin-top: 20px;
 }
 #project4{
@@ -74,8 +79,81 @@
     border : yellow 1px solid;
     box-shadow: rgba(255, 255, 255, 0.1) 0px 20px 25px -5px, rgba(255, 255, 255, 0.04) 0px 10px 10px -5px;
     margin-top: 20px;
+    position: relative;
+}
+#proj1Image{
+  background-image: url('../assets/projects/polydestroy.png');
+  background-size: 100% 400px;
+  /* width: 100%; */
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  border-radius: 2em;
 
+}
+#proj1desc{
+  background-size: 100% 400px;
+  /* width: 100%; */
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  border-radius: 2em;
 
+}
+.projBottom{
+  align-items: flex-end;
+  bottom:0px;
+  margin-top: auto;
+  margin-bottom: 20px;
+
+}
+.projLinks{
+  bottom: 10px;
+  margin-top: auto;
+}
+.liveLink{
+  padding: 5px;
+  color:white;
+  margin-right: 10px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  text-decoration: none;
+}
+.liveLink:hover{
+  padding: 5px;
+  color:black;
+  background-color: white;
+  margin-right: 10px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  text-decoration: none;
+}
+.gitLink{
+  padding: 5px;
+  color:white;
+  margin-left: 10px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  text-decoration: none;
+}
+.gitLink:hover{
+  background-color: white;
+  padding: 5px;
+  margin-left: 10px;
+  color:black;  
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  text-decoration: none;
 }
 @keyframes gradient {
     0% {
