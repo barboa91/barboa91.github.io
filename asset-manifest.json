@@ -1,8 +1,9 @@
 {
   "files": {
-    "main.css": "/static/css/main.ab7c3e25.css",
-    "main.js": "/static/js/main.ee38259b.js",
+    "main.css": "/static/css/main.3f36f626.css",
+    "main.js": "/static/js/main.beb9dc5d.js",
     "static/js/787.7cb2e3e1.chunk.js": "/static/js/787.7cb2e3e1.chunk.js",
+    "static/media/polydestroy.png": "/static/media/polydestroy.35bb3228c3e171e1a290.png",
     "static/media/binding_dark.png": "/static/media/binding_dark.3126f02bb55dea8b0ce0.png",
     "static/media/linux-tux-1.svg": "/static/media/linux-tux-1.25037f3bba2fb07bce71.svg",
     "static/media/postgresql.svg": "/static/media/postgresql.ae92b576b8ea41666538.svg",
@@ -21,12 +22,12 @@
     "static/media/html-1.svg": "/static/media/html-1.f318c8b1d5945fa9adc8.svg",
     "static/media/microsoft-windows-22.svg": "/static/media/microsoft-windows-22.4b4849633a68ebb30496.svg",
     "static/media/vue-js-1.svg": "/static/media/vue-js-1.4921ee763e7954a01fa7.svg",
-    "main.ab7c3e25.css.map": "/static/css/main.ab7c3e25.css.map",
-    "main.ee38259b.js.map": "/static/js/main.ee38259b.js.map",
+    "main.3f36f626.css.map": "/static/css/main.3f36f626.css.map",
+    "main.beb9dc5d.js.map": "/static/js/main.beb9dc5d.js.map",
     "787.7cb2e3e1.chunk.js.map": "/static/js/787.7cb2e3e1.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.ab7c3e25.css",
-    "static/js/main.ee38259b.js"
+    "static/css/main.3f36f626.css",
+    "static/js/main.beb9dc5d.js"
   ]
 }
