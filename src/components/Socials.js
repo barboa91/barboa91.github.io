@@ -1,5 +1,5 @@
 import React from "react";
-import linkedin from "./images/linkedin-icon.svg"
+import linkedin from "../assets/logos/linkedin-icon.svg"
 import github from "./images/Octicons-mark-github.svg"
 import { Link } from "react-router-dom";
 const Socials = () =>{

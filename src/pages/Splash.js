@@ -159,6 +159,36 @@ const Splash = () =>{
     }
     const [aboutToggle,setAboutToggle] = useState([0,0,0,0])
     
+    const proj1 = {
+        title : "Polygon Destroyer",
+        decription: "This is my first project and one that I am most proud of. It is a video game in which the objective is to shoot lazers out of Jeremy's eyes and destroy yello rectangles. The only technology I used to create this is JavaScript HTML and CSS.",
+        tech:["JavaScript","HTML","CSS"],
+        site: "https://bashful-respect.surge.sh/",
+        git:"https://github.com/barboa91/Polygon-Destroyer"
+    }
+    const proj2 = {
+        title:"Archimagirus",
+        decription:"No-nonsense Cookbook website, complete with pictures and comments and user accounts.",
+        tech:["JavaScript","React","MongoDB","Mongoose","Express","Node.js","MERN","CRUD","HTML","CSS"],
+        site:"https://tranquil-ocean-88816.herokuapp.com/",
+        git:""
+    }
+    const proj3 = {
+        title:"TravelBag",
+        decription:"TravelBag is a social media site that is exclusively for presenting goregeous vistas and beautiful landscapes. Create an account and start posting some of your pictures!",
+        tech:["JavaScript","React","PostgreSQL","Sequelize","Express","Node.js","PERN","CRUD","HTML","CSS"],
+        site:"https://travel222sei.herokuapp.com/",
+        git:""
+    }
+    const proj4 = {
+        title:"Draw!",
+        decription:"This is a drawing app that is built with canvas. It features JWT authentication for log in and post features. This project was particularly challenging with getting the canvas set up correctly. Users are able to download thier creations as well as upload them to share with other users of the website. The focus of this project was JavaScript Canvas and React. The technologies used are React, Javascript Canvas, PostGresql, Express, Sequelize, Node.js",
+        tech:["JavaScript","Canvas","React","PostgreSQL","Sequelize","Express","Node.js","PERN","CRUD","HTML","CSS"],
+        site:"https://travel222sei.herokuapp.com/",
+        git:""
+    }
+    
+
     return (
       <div className="splash-container">
         <Navbar />
@@ -176,13 +206,13 @@ const Splash = () =>{
                   <div className="projTitle">Polygon Destroyer</div>
                   <div className="projBottom">
                       <div className="projLinks">
-                        <a target="_blank" rel="noreferrer" href="https://bashful-respect.surge.sh/" className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([1,aboutToggle[1],aboutToggle[2],aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href="https://github.com/barboa91/Polygon-Destroyer" className="gitLink">Git</a>
+                        <a target="_blank" rel="noreferrer" href="https://bashful-respect.surge.sh/" className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([1,aboutToggle[1],aboutToggle[2],aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href={proj1.git} className="gitLink">Git</a>
                       </div>
                   </div>
                 </div>: 
-                <div id="proj1desc">
+                <div id="projDesc">
                 <div className="projTitle">Polygon Destroyer</div>
-                <div> This is my first project and one that I am most proud of. It is a video game in which the objective is to shoot lazers out of Jeremy's eyes and destroy yello rectangles. The only technology I used to create this is JavaScript HTML and CSS.</div>
+                <div> {proj1.decription}</div>
                 <div className="projBottom">
                     <div className="projLinks">
                       <a target="_blank" rel="noreferrer" href="https://bashful-respect.surge.sh/" className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([0,aboutToggle[1],aboutToggle[2],aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href="https://github.com/barboa91/Polygon-Destroyer" className="gitLink">Git</a>
@@ -198,7 +228,25 @@ const Splash = () =>{
                 }}
                 onMouseOut={() => unHighlight2()}
               >
-                B
+                  {aboutToggle[1] === 0 ? 
+             <div id="proj2Image">
+                  <div className="projTitle">{proj2.title}</div>
+                  <div className="projBottom">
+                      <div className="projLinks">
+                        <a target="_blank" rel="noreferrer" href={proj2.site} className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([aboutToggle[0],1,aboutToggle[2],aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href={proj2.git} className="gitLink">Git</a>
+                      </div>
+                  </div>
+                </div>:  
+                <div id="projDesc">
+                <div className="projTitle">{proj2.title}</div>
+                <div> {proj2.decription}</div>
+                <div className="projBottom">
+                    <div className="projLinks">
+                      <a target="_blank" rel="noreferrer" href={proj2.site} className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([aboutToggle[0],0,aboutToggle[2],aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href={proj2.git} className="gitLink">Git</a>
+                    </div>
+                </div>
+              </div>
+              }
               </div>
               <div
                 id="project3"
@@ -207,9 +255,45 @@ const Splash = () =>{
                 }}
                 onMouseOut={() => unHighlight3()}
               >
-                C
+                                  {aboutToggle[2] === 0 ? 
+             <div id="proj3Image">
+                  <div className="projTitle">{proj3.title}</div>
+                  <div className="projBottom">
+                      <div className="projLinks">
+                        <a target="_blank" rel="noreferrer" href={proj3.site} className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([aboutToggle[0],aboutToggle[1],1,aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href={proj3.git} className="gitLink">Git</a>
+                      </div>
+                  </div>
+                </div>:  
+                <div id="projDesc">
+                <div className="projTitle">{proj3.title}</div>
+                <div> {proj3.decription}</div>
+                <div className="projBottom">
+                    <div className="projLinks">
+                      <a target="_blank" rel="noreferrer" href={proj3.site} className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([aboutToggle[0],aboutToggle[1],0,aboutToggle[3]])}>About</div><a  target="_blank" rel="noreferrer" href={proj3.git} className="gitLink">Git</a>
+                    </div>
+                </div>
               </div>
-              <div id="project4">D</div>
+              }
+              </div>
+              <div id="project4">                                  {aboutToggle[3] === 0 ? 
+             <div id="proj4Image">
+                  <div className="projTitle">{proj4.title}</div>
+                  <div className="projBottom">
+                      <div className="projLinks">
+                        <a target="_blank" rel="noreferrer" href={proj4.site} className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([aboutToggle[0],aboutToggle[1],aboutToggle[2],1])}>About</div><a  target="_blank" rel="noreferrer" href={proj4.git} className="gitLink">Git</a>
+                      </div>
+                  </div>
+                </div>:  
+                <div id="projDesc">
+                <div className="projTitle">{proj4.title}</div>
+                <div> {proj4.decription}</div>
+                <div className="projBottom">
+                    <div className="projLinks">
+                      <a target="_blank" rel="noreferrer" href={proj4.site} className="liveLink">Live</a><div style={{display:"inline"}} onClick={()=>setAboutToggle([aboutToggle[0],aboutToggle[1],aboutToggle[2],0])}>About</div><a  target="_blank" rel="noreferrer" href={proj4.git} className="gitLink">Git</a>
+                    </div>
+                </div>
+              </div>
+              }</div>
             </div>
           </div>
         </div>
