@@ -23,7 +23,7 @@
     background-size: contain;
     background-repeat: no-repeat;
     border-radius: 25px;
-    border: 1px solid white;
+    border: 2px solid white;
     background-position: center;
   }
   #linkedin:hover{
@@ -34,7 +34,7 @@
     background-size: contain;
     background-repeat: no-repeat;
     border-radius: 25px;
-    border: 1px solid white;
+    border: 2px solid white;
     background-position: center;
   }
   #github{

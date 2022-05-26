@@ -1,13 +1,17 @@
 {
   "files": {
-    "main.css": "/static/css/main.3f36f626.css",
-    "main.js": "/static/js/main.beb9dc5d.js",
+    "main.css": "/static/css/main.cc5c0854.css",
+    "main.js": "/static/js/main.c7c6bf3d.js",
     "static/js/787.7cb2e3e1.chunk.js": "/static/js/787.7cb2e3e1.chunk.js",
-    "static/media/polydestroy.png": "/static/media/polydestroy.35bb3228c3e171e1a290.png",
+    "static/media/travelbag.png": "/static/media/travelbag.3687c5bbcf7a1a3e93c5.png",
+    "static/media/archimagirus.png": "/static/media/archimagirus.e933aee221d4037ea285.png",
+    "static/media/polydestroy.png": "/static/media/polydestroy.fe4b1740ed1b835717f5.png",
+    "static/media/draw.png": "/static/media/draw.65fbdcf103a3915fb97c.png",
     "static/media/binding_dark.png": "/static/media/binding_dark.3126f02bb55dea8b0ce0.png",
     "static/media/linux-tux-1.svg": "/static/media/linux-tux-1.25037f3bba2fb07bce71.svg",
     "static/media/postgresql.svg": "/static/media/postgresql.ae92b576b8ea41666538.svg",
     "static/media/mac-os-2.svg": "/static/media/mac-os-2.1124c8ce88feb13b9b92.svg",
+    "static/media/gmail-icon.svg": "/static/media/gmail-icon.3f310b41000544c6a59a.svg",
     "static/media/react-2.svg": "/static/media/react-2.e68b35f4774979ae220b.svg",
     "static/media/nodejs-icon.svg": "/static/media/nodejs-icon.615ffbea9529ca7047ed.svg",
     "static/media/redux.svg": "/static/media/redux.0e4fb1c819ac4c060c92.svg",
@@ -15,19 +19,19 @@
     "static/media/python-5.svg": "/static/media/python-5.e6d7dc739a91892bbf1f.svg",
     "static/media/mongodb-icon-1.svg": "/static/media/mongodb-icon-1.1aca075d5cce0819fea7.svg",
     "static/media/logo-javascript.svg": "/static/media/logo-javascript.00f3e5cf8bcf4ae623b3.svg",
-    "static/media/Octicons-mark-github.svg": "/static/media/Octicons-mark-github.599e7f128113af7b8b09467b632225bb.svg",
+    "static/media/Octicons-mark-github.svg": "/static/media/Octicons-mark-github.255db585f8a0eb28a1e4.svg",
     "static/media/linkedin-icon.svg": "/static/media/linkedin-icon.f10c9de5cd3d33321b434c21192b499d.svg",
     "index.html": "/index.html",
     "static/media/css-3.svg": "/static/media/css-3.4e47c3122b8d2476a02f.svg",
     "static/media/html-1.svg": "/static/media/html-1.f318c8b1d5945fa9adc8.svg",
     "static/media/microsoft-windows-22.svg": "/static/media/microsoft-windows-22.4b4849633a68ebb30496.svg",
     "static/media/vue-js-1.svg": "/static/media/vue-js-1.4921ee763e7954a01fa7.svg",
-    "main.3f36f626.css.map": "/static/css/main.3f36f626.css.map",
-    "main.beb9dc5d.js.map": "/static/js/main.beb9dc5d.js.map",
+    "main.cc5c0854.css.map": "/static/css/main.cc5c0854.css.map",
+    "main.c7c6bf3d.js.map": "/static/js/main.c7c6bf3d.js.map",
     "787.7cb2e3e1.chunk.js.map": "/static/js/787.7cb2e3e1.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.3f36f626.css",
-    "static/js/main.beb9dc5d.js"
+    "static/css/main.cc5c0854.css",
+    "static/js/main.c7c6bf3d.js"
   ]
 }

@@ -4,6 +4,7 @@ import './App.css';
 import Skills from './components/Skills';
 import Socials from './components/Socials';
 import Splash from './pages/Splash';
+import Splash2 from './pages/Splash2'
 import { Route, Routes } from 'react-router-dom';
 
 
@@ -13,13 +14,15 @@ function App() {
           <div className="App">
             <Routes>
               <Route path = "/" element = {<Splash/>}></Route>
+              <Route path = "/1" element = {<Splash2/>}></Route>
+
               <Route path = "/socials" element = {<Socials/>}></Route>
               
             </Routes>
             <footer>
               
             <Skills/>
-            <div>Copyright &copy; Alex Barbosa </div>
+            Copyright &copy; Alex Barbosa 
               
               </footer>
           </div>

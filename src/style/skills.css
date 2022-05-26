@@ -1,5 +1,5 @@
 .skills-bar{
-    position: relative;
+    position: absolute;
     bottom: 0px;
     display: flex;
     flex-wrap: wrap;

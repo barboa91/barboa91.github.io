@@ -199,14 +199,34 @@
   border-radius: 2em;
 }
 #projDesc{
-  background-size: 100% 300px;
+  background-size: 100%;
   /* width: 100%; */
-  height: 300px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   flex: 1;
   border-radius: 2em;
 
+}
+.technologies{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  
+}
+.tech{ 
+  background-color: white;
+  margin-top: 20px;
+  margin-left: 5px;
+  margin-right: 5px;
+
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  color: black;
+  padding: 5px;
+  
 }
 .projBottom{
   align-items: flex-end;
@@ -219,45 +239,60 @@
   bottom: 10px;
   margin-top: auto;
 }
+.aboutLink{
+  padding: 5px;
+  color:white;
+  text-decoration: none;
+  background-color: #3b1b55;
+}
+.aboutLink:hover{
+  padding: 5px;
+  color:black;
+  text-decoration: none;
+  background-color: white;
+
+}
 .liveLink{
   padding: 5px;
   color:white;
-  margin-right: 10px;
+  margin-right: 0px;
   border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  /* border-top-right-radius: 10px; */
   border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  /* border-bottom-right-radius: 10px; */
   text-decoration: none;
+  background-color: #3b1b55;
 }
 .liveLink:hover{
   padding: 5px;
   color:black;
   background-color: white;
-  margin-right: 10px;
+  margin-right: 0px;
   border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  /* border-top-right-radius: 10px; */
   border-bottom-left-radius: 10px;
-  border-bottom-right-radius: 10px;
+  /* border-bottom-right-radius: 10px; */
   text-decoration: none;
 }
 .gitLink{
   padding: 5px;
   color:white;
-  margin-left: 10px;
-  border-top-left-radius: 10px;
+  margin-left: 0px;
+  /* border-top-left-radius: 10px; */
   border-top-right-radius: 10px;
-  border-bottom-left-radius: 10px;
+  /* border-bottom-left-radius: 10px; */
   border-bottom-right-radius: 10px;
+  background-color: #3b1b55;
   text-decoration: none;
 }
 .gitLink:hover{
   background-color: white;
   padding: 5px;
-  margin-left: 10px;
+  margin-left: 0px;
   color:black;  
-  border-top-left-radius: 10px;
+  /* border-top-left-radius: 10px; */
   border-top-right-radius: 10px;
-  border-bottom-left-radius: 10px;
+  /* border-bottom-left-radius: 10px; */
   border-bottom-right-radius: 10px;
   text-decoration: none;
 }
