@@ -1,0 +1,27 @@
+.aboutme{
+    height: 90%;
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 2em;
+    justify-content: center;
+}
+.profPic{
+    background-image: url('../assets/headshot.jpeg');
+    height: 45vh;
+    
+    object-fit: contain;
+    border-radius: 50px;
+
+}
+.profDesc{
+    color: white;
+    text-align: center;
+    width: 50%;
+}
+.aboutName{
+    font-size: 4vh;
+    padding-bottom: 2vh;
+}
+.email{
+    padding: 20px;
+}

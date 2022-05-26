@@ -1,6 +1,6 @@
 import React,{ useState }  from "react";
 import Navbar from "../components/Navbar";
-import { CSSTransition } from "react-transition-group";
+// import { CSSTransition } from "react-transition-group";
 // import Skills from "../components/Skills";
 // import { Link } from "react-router-dom";
 import '../style/splash.css'

@@ -206,6 +206,8 @@
   flex-direction: column;
   flex: 1;
   border-radius: 2em;
+  padding-right: 1em;
+  padding-top: 2em;
 
 }
 .technologies{
