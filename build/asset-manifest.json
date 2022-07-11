@@ -1,12 +1,14 @@
 {
   "files": {
-    "main.css": "/static/css/main.e8a35439.css",
-    "main.js": "/static/js/main.d2403407.js",
+    "main.css": "/static/css/main.29f5e41b.css",
+    "main.js": "/static/js/main.789bfa8d.js",
     "static/js/787.7cb2e3e1.chunk.js": "/static/js/787.7cb2e3e1.chunk.js",
     "static/media/travelbag.png": "/static/media/travelbag.3687c5bbcf7a1a3e93c5.png",
     "static/media/archimagirus.png": "/static/media/archimagirus.e933aee221d4037ea285.png",
     "static/media/polydestroy.png": "/static/media/polydestroy.fe4b1740ed1b835717f5.png",
     "static/media/draw.png": "/static/media/draw.65fbdcf103a3915fb97c.png",
+    "static/media/headshot.jpeg": "/static/media/headshot.10ec7291d4cf83b4f4cf.jpeg",
+    "static/media/Resume.pdf": "/static/media/Resume.1155e1ce765dba51acaf.pdf",
     "static/media/binding_dark.png": "/static/media/binding_dark.3126f02bb55dea8b0ce0.png",
     "static/media/linux-tux-1.svg": "/static/media/linux-tux-1.25037f3bba2fb07bce71.svg",
     "static/media/postgresql.svg": "/static/media/postgresql.ae92b576b8ea41666538.svg",
@@ -26,12 +28,12 @@
     "static/media/html-1.svg": "/static/media/html-1.f318c8b1d5945fa9adc8.svg",
     "static/media/microsoft-windows-22.svg": "/static/media/microsoft-windows-22.4b4849633a68ebb30496.svg",
     "static/media/vue-js-1.svg": "/static/media/vue-js-1.4921ee763e7954a01fa7.svg",
-    "main.e8a35439.css.map": "/static/css/main.e8a35439.css.map",
-    "main.d2403407.js.map": "/static/js/main.d2403407.js.map",
+    "main.29f5e41b.css.map": "/static/css/main.29f5e41b.css.map",
+    "main.789bfa8d.js.map": "/static/js/main.789bfa8d.js.map",
     "787.7cb2e3e1.chunk.js.map": "/static/js/787.7cb2e3e1.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.e8a35439.css",
-    "static/js/main.d2403407.js"
+    "static/css/main.29f5e41b.css",
+    "static/js/main.789bfa8d.js"
   ]
 }

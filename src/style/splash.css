@@ -326,3 +326,72 @@
       color: #6c6cc9;
     }
   }
+
+@media screen and (max-width:480px) {
+
+  .splash-wrap {
+    justify-content: space-between;
+    height: auto;
+    width: 100%;
+    margin: 0;
+    display: block;
+    color: #ffffff;
+  }
+
+  .splash-container{
+    background-color: #1dc21d;
+  }
+
+  .splash-welcome{
+    height: 100%;
+  }
+  .splash-left {
+    width: 100%;
+    height: 100%;
+  }
+  .splash-right {
+    width: 100%;
+  }
+  #project1{
+    width: 100%;
+  }
+  #project2{
+    width: 100%;
+  }
+  #project3{
+    width: 100%;
+  }
+  #project4{
+    width: 100%;
+  }
+  #project1:hover{
+    width: 99%;
+  }
+  #project2:hover{
+    width: 99%;
+  }
+  #project3:hover{
+    width: 99%;
+  }
+  #project4:hover{
+    width: 99%;
+  }
+  #proj1Image{
+    width: 100%;
+  }
+  #proj2Image{
+    width: 100%;
+  }
+  #proj3Image{
+    width: 100%;
+  }
+  #proj4Image{
+    width: 100%;
+  }
+  .project-squares{
+    display: block;
+    flex-wrap: wrap;
+
+}
+  
+}
