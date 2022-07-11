@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/static/css/main.29f5e41b.css",
+    "main.css": "/static/css/main.d8db29be.css",
     "main.js": "/static/js/main.789bfa8d.js",
     "static/js/787.7cb2e3e1.chunk.js": "/static/js/787.7cb2e3e1.chunk.js",
     "static/media/travelbag.png": "/static/media/travelbag.3687c5bbcf7a1a3e93c5.png",
@@ -20,20 +20,20 @@
     "static/media/ubuntu-icon.svg": "/static/media/ubuntu-icon.e40441e54e6640537dda.svg",
     "static/media/python-5.svg": "/static/media/python-5.e6d7dc739a91892bbf1f.svg",
     "static/media/mongodb-icon-1.svg": "/static/media/mongodb-icon-1.1aca075d5cce0819fea7.svg",
+    "index.html": "/index.html",
     "static/media/logo-javascript.svg": "/static/media/logo-javascript.00f3e5cf8bcf4ae623b3.svg",
     "static/media/Octicons-mark-github.svg": "/static/media/Octicons-mark-github.255db585f8a0eb28a1e4.svg",
     "static/media/linkedin-icon.svg": "/static/media/linkedin-icon.f10c9de5cd3d33321b434c21192b499d.svg",
-    "index.html": "/index.html",
     "static/media/css-3.svg": "/static/media/css-3.4e47c3122b8d2476a02f.svg",
     "static/media/html-1.svg": "/static/media/html-1.f318c8b1d5945fa9adc8.svg",
     "static/media/microsoft-windows-22.svg": "/static/media/microsoft-windows-22.4b4849633a68ebb30496.svg",
     "static/media/vue-js-1.svg": "/static/media/vue-js-1.4921ee763e7954a01fa7.svg",
-    "main.29f5e41b.css.map": "/static/css/main.29f5e41b.css.map",
+    "main.d8db29be.css.map": "/static/css/main.d8db29be.css.map",
     "main.789bfa8d.js.map": "/static/js/main.789bfa8d.js.map",
     "787.7cb2e3e1.chunk.js.map": "/static/js/787.7cb2e3e1.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.29f5e41b.css",
+    "static/css/main.d8db29be.css",
     "static/js/main.789bfa8d.js"
   ]
 }
