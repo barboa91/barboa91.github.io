@@ -3,7 +3,7 @@ import { CSSTransition } from "react-transition-group";
 import Navbar from "../components/Navbar";
 import "../style/welcome.css";
 
-const traits = ["student", "developer", "designer", "gamer", "athlete", "hacker", "fixer", "winner","programmer", "front-end developer", "back-end developer","problem solver","googler","wizard"];
+const traits = ["student", "developer", "designer", "gamer", "hacker", "fixer", "winner","programmer", "front-end developer", "back-end developer","problem solver","googler","wizard","thinker"];
 
 const Splash2024 = () => {
   const [isHovered, setIsHovered] = useState(false);
