@@ -3,7 +3,8 @@ import './App.css';
 import Skills from './components/Skills';
 import Socials from './components/Socials';
 import Splash from './pages/Splash';
-import Splash2 from './pages/Splash2'
+import Splash2 from './pages/Splash2';
+import Splash2024 from './pages/Splash202401';
 import AboutMe from './components/AboutMe';
 import { Route, Routes } from 'react-router-dom';
 
@@ -16,9 +17,11 @@ function App() {
             <Routes>
               <Route path = "/" element = {<Splash/>}></Route>
               <Route path = "/1" element = {<Splash2/>}></Route>
-              <Route path = "/aboutme" element = {<AboutMe/>}></Route>
+              <Route path = "/2024" element = {<Splash2024/>}></Route>
 
+              <Route path = "/aboutme" element = {<AboutMe/>}></Route>
               <Route path = "/socials" element = {<Socials/>}></Route>
+
               
             </Routes>
             {/* <AboutMe/> */}

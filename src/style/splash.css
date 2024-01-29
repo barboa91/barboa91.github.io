@@ -22,6 +22,9 @@
     padding-top: 10%;
     font-weight: 700;
     color: #ffffff;
+    animation: 1s ease-out 0s 1 slidefromtop-onload;
+    animation-fill-mode: none;
+    animation-iteration-count: 1;
   }
 
 .splash-welcome:hover {
@@ -32,6 +35,8 @@
   font-weight: 700;
   color: #ffffff;
   animation: colorRotate 6s linear 0s infinite;
+  animation-play-state: paused;
+
 }
 .splash-left {
   width: 50%;
@@ -393,5 +398,9 @@
     flex-wrap: wrap;
 
 }
-  
+ 
+
+
+
 }
+

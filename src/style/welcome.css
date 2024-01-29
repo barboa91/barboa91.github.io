@@ -1,0 +1,90 @@
+.welcome {
+  font-size: 3em;
+  text-align: left;
+  padding: 10%;
+  font-weight: 700;
+  color: #ffffff;
+  animation: 1s ease-out 0s 1 slidefromtop-onload;
+  animation-fill-mode: none;
+  animation-iteration-count: 1;
+}
+
+.welcomeName {
+  display: inline-block
+}
+
+
+
+@keyframes slidefromtop-onload {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes colorChange {
+  from {
+    color: #afaff3;
+  }
+
+  10% {
+    color: #88b9da;
+  }
+
+  50% {
+    color: #1dc21d;
+  }
+
+  75% {
+    color: #634b57;
+  }
+
+  100% {
+    color: #6c6cc9;
+  }
+}
+
+
+.bouncy {
+  display: inline-block;
+
+}
+
+@keyframes bouncing-letters {
+  0%, 80%{
+    transform: translateY(0) rotate(0deg);
+
+  }
+
+  50% {
+    transform: translateY(-15%) rotate(360deg);
+  }
+
+  100% {
+    transform: translateY(0);
+    /* transform: rotate(-90deg); */
+  }
+}
+
+.smarthighlight {
+  /* color: blueviolet; */
+  display: inline;
+
+  &:hover {
+    /* color: blueviolet; */
+    animation: colorChange 2s ease 0s infinite;
+  }
+}
+
+.smarthighlight:hover>.bouncy {
+
+  animation: bouncing-letters 3s ease-in-out 0s infinite;
+
+}
+
+.traits {
+  display: inline-block;
+}
