@@ -137,6 +137,7 @@ footer a{color:var(--brass)}
 .mono.weapon,.big-mono.weapon{background:linear-gradient(145deg,color-mix(in srgb,var(--weapon) 85%,#000),color-mix(in srgb,var(--weapon) 45%,#000))}
 .mono.vitality,.big-mono.vitality{background:linear-gradient(145deg,color-mix(in srgb,var(--vital) 85%,#000),color-mix(in srgb,var(--vital) 45%,#000))}
 .mono.spirit,.big-mono.spirit{background:linear-gradient(145deg,color-mix(in srgb,var(--spirit) 85%,#000),color-mix(in srgb,var(--spirit) 45%,#000))}
+.mono img,.big-mono img{width:86%;height:86%;object-fit:contain;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
 .tier-pip{font:500 10px/1 var(--mono);color:#fff;opacity:.9}
 .chip.weapon[aria-pressed="true"]{background:var(--weapon);border-color:var(--weapon);color:#140a02}
 .chip.vitality[aria-pressed="true"]{background:var(--vital);border-color:var(--vital);color:#08140a}
@@ -232,6 +233,52 @@ const slug = s => s.toLowerCase().replace(/'/g,'').replace(/[^a-z0-9]+/g,'-').re
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const cost = i => i.cost ? i.cost.toLocaleString('en-US') + ' souls' : 'Street Brawl';
 function initials(n){const w=n.replace(/'/g,'').split(/[\s-]+/).filter(Boolean);return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase()}
+
+/* In-game shop icons, loaded at runtime from the deadlock-api.com assets API (the same source its own UI library uses).
+   Any item that doesn't resolve keeps its monogram tile. */
+const ICON = {};
+const ICON_API = 'https://api.deadlock-api.com/v1/assets/items?language=english';
+const ALIAS = {armorpiercer:['armorpiercingrounds','armorpiercing'], spiritshredder:['spiritshredderbullets'], goldengooseegg:['goldenegg'], heroicaura:['heroesaura']};
+const norm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
+function glyph(i){
+  const src = ICON[i.slug];
+  return src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode('${initials(i.name)}'))">` : initials(i.name);
+}
+function applyIcons(list){
+  const shop = list.filter(x => x && x.name && (x.shop_image_webp || x.shop_image || x.image_webp || x.image)
+    && (x.type === 'upgrade' || x.item_slot_type));
+  const byName = new Map(shop.map(x => [norm(x.name), x]));
+  const pick = x => x.shop_image_webp || x.shop_image || x.image_webp || x.image;
+  let hits = 0; const missing = [];
+  for (const i of ITEMS) {
+    const n = norm(i.name);
+    let m = byName.get(n);
+    if (!m) for (const a of (ALIAS[n] || [])) { m = byName.get(a); if (m) break; }
+    if (!m) m = shop.find(x => { const k = norm(x.name);
+      return (!x.item_slot_type || x.item_slot_type === i.cat) && k.length > 4 && (k.startsWith(n) || n.startsWith(k)); });
+    if (m) { ICON[i.slug] = pick(m); hits++; } else missing.push(i.name);
+  }
+  document.documentElement.dataset.icons = hits;
+  if (missing.length) console.info('[Item Codex] no icon for', missing.length, 'items:', missing.join(', '));
+  return hits;
+}
+async function loadIcons(){
+  const KEY = 'icodex-icons-v1', DAY = 864e5;
+  try { const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (c && Date.now() - c.t < DAY && c.list) { applyIcons(c.list); return true; } } catch (e) {}
+  try {
+    const r = await fetch(ICON_API, {mode: 'cors'});
+    if (!r.ok) throw new Error(r.status);
+    const raw = await r.json();
+    const list = raw.map(x => ({name: x.name, type: x.type, item_slot_type: x.item_slot_type,
+      shop_image_webp: x.shop_image_webp, shop_image: x.shop_image, image_webp: x.image_webp, image: x.image}))
+      .filter(x => x.shop_image_webp || x.shop_image || x.image_webp || x.image);
+    applyIcons(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t: Date.now(), list})); } catch (e) {}
+    return true;
+  } catch (e) { console.info('[Item Codex] icons unavailable, using monograms:', e.message || e); return false; }
+}
+
 const order = {weapon:0,vitality:1,spirit:2};
 ITEMS.forEach(i=>i.slug=slug(i.name));
 ITEMS.sort((a,b)=>a.tier-b.tier||order[a.cat]-order[b.cat]||a.name.localeCompare(b.name));
@@ -263,7 +310,7 @@ function renderList(){
     if(i.tier!==last){last=i.tier;
       html+=`<li class="grouph"><span>${TIER[i.tier]}</span><span>${i.cost?i.cost.toLocaleString('en-US'):'—'}</span></li>`}
     html+=`<li><button data-s="${i.slug}" aria-current="${state.cur===i.slug}">
-      <span class="mono ${i.cat}">${initials(i.name)}</span>
+      <span class="mono ${i.cat}">${glyph(i)}</span>
       <span class="li-txt"><span class="li-name">${hl(i.name)}</span><br>
       <span class="li-sub">${CAT[i.cat]} · ${KIND[i.kind]}${i.cd?' · '+esc(i.cd):''}</span></span></button></li>`;
   }
@@ -280,7 +327,7 @@ function renderItem(s){
         <p>${hl(i.effect)}</p><div class="cd">${i.cd?(i.kind==='active'?'Cooldown ':'Internal cooldown ')+esc(i.cd):'No cooldown'}</div></section>`;
   document.getElementById('dossier').innerHTML=`
     <section class="hero-head">
-      <div class="big-mono ${i.cat}" aria-hidden="true">${initials(i.name)}</div>
+      <div class="big-mono ${i.cat}" aria-hidden="true">${glyph(i)}</div>
       <div style="min-width:0"><h2>${esc(i.name)}</h2>
         <div class="tags">
           <span class="tag ${i.cat}">${CAT[i.cat]}</span>
@@ -295,7 +342,7 @@ function renderItem(s){
     ${effectBlock}
     <div class="sec-h">Other ${CAT[i.cat]} · ${TIER[i.tier]} items</div>
     <section class="peers">${peers.map(p=>`<button class="peer" data-s="${p.slug}" aria-current="${p.slug===i.slug}">
-      <span class="mono ${p.cat}">${initials(p.name)}</span>
+      <span class="mono ${p.cat}">${glyph(p)}</span>
       <span style="min-width:0"><b>${esc(p.name)}</b><small>${esc(p.kind==='stat'?p.stats.join(' · '):p.effect)}</small></span></button>`).join('')}</section>`;
   renderList();
 }
@@ -333,6 +380,7 @@ document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.i
 const initial=(location.hash||'').slice(1);
 const first=filtered()[0]||ITEMS[0];
 renderItem(ITEMS.some(i=>i.slug===initial)?initial:first.slug);
+loadIcons().then(ok=>{ if(ok && Object.keys(ICON).length) renderItem(state.cur); });
 </script>
 
 </body>
