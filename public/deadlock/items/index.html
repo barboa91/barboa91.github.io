@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deadlock Item Codex</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Limelight&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: two-pane codex — roster rail on the left, a dossier for the chosen hero on the right; stacks on phones. */
+:root{
+  --bg:#0f1214; --panel:#161b1e; --raise:#1d2428; --line:#2a3337;
+  --fg:#e6e2d6; --muted:#97a09f; --brass:#d2a64a; --brass-ink:#1a1408;
+  --weapon:#e58a3a; --vital:#7cc46a; --spirit:#b48cf0;
+  --display:"Limelight","Didot","Bodoni 72",Georgia,serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;
+  border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+.mast h1{font:400 clamp(34px,6vw,54px)/1 var(--display);margin:0;letter-spacing:.02em;color:var(--brass);text-wrap:balance}
+.mast p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 12px/1 var(--mono);color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Rail */
+.rail{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 24px)}
+@media (max-width:820px){.rail{position:static;max-height:none}}
+.search{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--fg);
+  font:15px var(--body);padding:10px 12px;border-radius:6px}
+.search:focus{outline:2px solid var(--brass);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:transparent;border:1px solid var(--line);color:var(--muted);font:500 12px var(--body);
+  padding:5px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brass);color:var(--brass-ink);border-color:var(--brass)}
+.chip:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.count{font:12px var(--mono);color:var(--muted)}
+.list{list-style:none;margin:0;padding:0;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+@media (max-width:820px){.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));max-height:300px}}
+.list button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;cursor:pointer;
+  border-bottom:1px solid var(--line)}
+.list button:hover{background:var(--raise)}
+.list button:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+.list button[aria-current="true"]{background:var(--raise);box-shadow:inset 3px 0 0 var(--brass)}
+.mono{width:32px;height:32px;flex:none;border-radius:4px;display:grid;place-items:center;
+  font:400 15px/1 var(--display);color:#fff;letter-spacing:.02em}
+.li-name{font-weight:600;font-size:14px;line-height:1.2}
+.li-sub{font-size:12px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.li-txt{min-width:0}
+
+/* Dossier */
+.dossier{min-width:0;display:flex;flex-direction:column;gap:18px}
+.hero-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px}
+.big-mono{width:84px;height:84px;border-radius:8px;display:grid;place-items:center;font:400 34px/1 var(--display);color:#fff;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.hero-head h2{font:400 clamp(30px,5vw,46px)/1.02 var(--display);margin:0;letter-spacing:.015em;text-wrap:balance}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tag{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:5px 8px;border-radius:3px;color:var(--brass)}
+.summary{margin:0;color:var(--fg);max-width:68ch}
+@media (max-width:520px){.hero-head{grid-template-columns:minmax(0,1fr)}.big-mono{width:64px;height:64px;font-size:26px}}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--panel);padding:10px 14px}
+.stat b{display:block;font:500 18px var(--mono);font-variant-numeric:tabular-nums}
+.stat small{font:500 11px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+.sec-h{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:6px 0 -6px;display:flex;align-items:center;gap:10px}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.innate{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vital);border-radius:8px;padding:14px 16px}
+.innate h3{margin:0 0 4px;font:600 16px var(--body)}
+.innate p{margin:0;color:var(--fg)}
+.innate.none{border-left-color:var(--line);color:var(--muted)}
+.innate.none p{color:var(--muted)}
+
+.abil{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){.abil{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.ult{border-color:color-mix(in srgb,var(--brass) 55%,var(--line))}
+.c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.slot{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+.key{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--line);border-radius:3px;font:500 11px var(--mono);color:var(--fg)}
+.card h4{margin:4px 0 0;font:600 18px/1.2 var(--body)}
+.kind{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:3px;white-space:nowrap}
+.kind.ability{color:var(--spirit);border:1px solid color-mix(in srgb,var(--spirit) 50%,transparent)}
+.kind.passive{color:var(--vital);border:1px solid color-mix(in srgb,var(--vital) 50%,transparent)}
+.kind.ultimate{color:var(--brass-ink);background:var(--brass)}
+.card p{margin:0}
+.cd{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.ups{list-style:none;margin:0;padding:0;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.ups li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:13.5px;color:var(--fg)}
+.pip{font:500 11px/1 var(--mono);color:var(--brass);padding-top:3px;white-space:nowrap}
+
+.shared{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.sk{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.sk h5{margin:0 0 3px;font:600 14px var(--body)}
+.sk p{margin:0;font-size:13.5px;color:var(--muted)}
+details.sharedwrap summary{cursor:pointer;list-style:none}
+details.sharedwrap summary::-webkit-details-marker{display:none}
+details.sharedwrap summary .sec-h::before{content:"▸";margin-right:2px;transition:transform .15s}
+details.sharedwrap[open] summary .sec-h::before{transform:rotate(90deg)}
+.hit{background:color-mix(in srgb,var(--brass) 30%,transparent);color:inherit;border-radius:2px}
+.sitenav{display:flex;gap:4px;margin-top:12px}
+.sitenav a{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:4px}
+.sitenav a[aria-current="page"]{color:var(--brass-ink);background:var(--brass);border-color:var(--brass)}
+.sitenav a:hover{color:var(--fg)}
+.sitenav a[aria-current="page"]:hover{color:var(--brass-ink)}
+.sitenav a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+footer{margin-top:32px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+footer a{color:var(--brass)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+/* Item-specific additions. Category colors follow the in-game shop: weapon orange, vitality green, spirit purple. */
+.mono.weapon,.big-mono.weapon{background:linear-gradient(145deg,color-mix(in srgb,var(--weapon) 85%,#000),color-mix(in srgb,var(--weapon) 45%,#000))}
+.mono.vitality,.big-mono.vitality{background:linear-gradient(145deg,color-mix(in srgb,var(--vital) 85%,#000),color-mix(in srgb,var(--vital) 45%,#000))}
+.mono.spirit,.big-mono.spirit{background:linear-gradient(145deg,color-mix(in srgb,var(--spirit) 85%,#000),color-mix(in srgb,var(--spirit) 45%,#000))}
+.tier-pip{font:500 10px/1 var(--mono);color:#fff;opacity:.9}
+.chip.weapon[aria-pressed="true"]{background:var(--weapon);border-color:var(--weapon);color:#140a02}
+.chip.vitality[aria-pressed="true"]{background:var(--vital);border-color:var(--vital);color:#08140a}
+.chip.spirit[aria-pressed="true"]{background:var(--spirit);border-color:var(--spirit);color:#120a1c}
+.grouph{position:sticky;top:0;z-index:1;background:var(--raise);font:600 11px var(--body);letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);padding:6px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+@media (max-width:820px){.grouph{grid-column:1/-1}}
+.tag.weapon{color:var(--weapon)} .tag.vitality{color:var(--vital)} .tag.spirit{color:var(--spirit)}
+.statlist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.statlist li{background:var(--panel);padding:10px 14px;font:500 14px var(--mono);font-variant-numeric:tabular-nums}
+.effect{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent-cat,var(--brass));border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.effect h3{margin:0;font:600 16px var(--body);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.effect p{margin:0}
+.kind.active{color:var(--brass-ink);background:var(--brass)}
+.kind.passive{color:var(--vital);border:1px solid color-mix(in srgb,var(--vital) 50%,transparent)}
+.kind.toggle{color:var(--weapon);border:1px solid color-mix(in srgb,var(--weapon) 50%,transparent)}
+.kind.stat{color:var(--muted);border:1px solid var(--line)}
+.peers{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.peer{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;min-width:0}
+.peer:hover{background:var(--raise)}
+.peer:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.peer[aria-current="true"]{box-shadow:inset 0 0 0 1px var(--brass)}
+.peer .mono{width:26px;height:26px;font-size:12px}
+.peer b{font:600 13.5px/1.25 var(--body);display:block}
+.peer small{font-size:12px;color:var(--muted);display:block;line-height:1.35;margin-top:2px}
+.sitenav{display:flex;gap:4px;margin-top:12px}
+.sitenav a{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:4px}
+.sitenav a[aria-current="page"]{color:var(--brass-ink);background:var(--brass);border-color:var(--brass)}
+.sitenav a:hover{color:var(--fg)}
+.sitenav a[aria-current="page"]:hover{color:var(--brass-ink)}
+.sitenav a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.sb{font:500 11px var(--mono);color:var(--muted)}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="mast">
+      <h1>Item Codex</h1>
+      <p>All 156 shop items across Weapon, Vitality and Spirit, plus the 17 Street Brawl legendaries, with stats, effects and cooldowns.</p>
+      <nav class="sitenav" aria-label="Codex pages">
+        <a href="https://alex-barbosa.com/deadlock/">Heroes</a>
+        <a href="https://alex-barbosa.com/deadlock/items/" aria-current="page">Items</a>
+      </nav>
+    </div>
+    <div class="legend" aria-label="Category legend">
+      <span><i class="dot" style="background:var(--weapon)"></i>Weapon</span>
+      <span><i class="dot" style="background:var(--vital)"></i>Vitality</span>
+      <span><i class="dot" style="background:var(--spirit)"></i>Spirit</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <aside class="rail">
+      <label for="q" class="count" style="display:block">Search items or effects</label>
+      <input id="q" class="search" type="search" placeholder="e.g. lifesteal, silence, barrier" autocomplete="off">
+      <div class="chips" role="group" aria-label="Category">
+        <button class="chip weapon" data-cat="weapon" aria-pressed="false">Weapon</button>
+        <button class="chip vitality" data-cat="vitality" aria-pressed="false">Vitality</button>
+        <button class="chip spirit" data-cat="spirit" aria-pressed="false">Spirit</button>
+      </div>
+      <div class="chips" role="group" aria-label="Tier">
+        <button class="chip" data-tier="1" aria-pressed="false">800</button>
+        <button class="chip" data-tier="2" aria-pressed="false">1,600</button>
+        <button class="chip" data-tier="3" aria-pressed="false">3,200</button>
+        <button class="chip" data-tier="4" aria-pressed="false">6,400</button>
+        <button class="chip" data-tier="5" aria-pressed="false">Legendary</button>
+      </div>
+      <div class="chips" role="group" aria-label="Type">
+        <button class="chip" id="f-active" aria-pressed="false">Has an active</button>
+      </div>
+      <div class="count" id="count"></div>
+      <ul class="list" id="list"></ul>
+    </aside>
+
+    <main class="dossier" id="dossier" aria-live="polite"></main>
+  </div>
+
+  <footer>
+    Data compiled from <a href="https://deadlock.wiki/Items" target="_blank" rel="noopener">deadlock.wiki</a> and <a href="https://mobalytics.gg/deadlock/items" target="_blank" rel="noopener">Mobalytics</a>, October 2026. Values are base numbers; Deadlock changes often between patches. Legendary items appear only in the Street Brawl mode.
+  </footer>
+</div>
+
+<script>
+const ITEMS = [{"name": "Close Quarters", "cat": "weapon", "tier": 1, "cost": 800, "kind": "passive", "stats": ["+20% melee resist", "+20% weapon damage up close"], "effect": "Adds weapon damage when your target is within about 15m.", "cd": null}, {"name": "Extended Magazine", "cat": "weapon", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+30% ammo", "+8% weapon damage"], "effect": "", "cd": null}, {"name": "Headshot Booster", "cat": "weapon", "tier": 1, "cost": 800, "kind": "passive", "stats": ["+40 bonus health", "bonus headshot damage"], "effect": "Headshots deal extra weapon damage on a short internal cooldown.", "cd": "9s"}, {"name": "High-Velocity Rounds", "cat": "weapon", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+60% bullet velocity", "+8% weapon damage"], "effect": "", "cd": null}, {"name": "Monster Rounds", "cat": "weapon", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+25% weapon damage vs NPCs", "+25% bullet resist vs NPCs", "+1 out-of-combat regen"], "effect": "", "cd": null}, {"name": "Rapid Rounds", "cat": "weapon", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+10% fire rate"], "effect": "", "cd": null}, {"name": "Restorative Shot", "cat": "weapon", "tier": 1, "cost": 800, "kind": "passive", "stats": ["+6% weapon damage"], "effect": "Your next bullet heals you, more when it hits a hero than an NPC or orb.", "cd": "6s"}, {"name": "Active Reload", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+20% max ammo", "+25% fire rate and +16% bullet lifesteal on proc"], "effect": "Hitting the reload timing window finishes the reload instantly and grants fire rate, lifesteal and speed.", "cd": "12s"}, {"name": "Fleetfoot", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "active", "stats": ["+35% slide distance", "+6% bullet resist", "+6% weapon damage"], "effect": "Removes the move speed penalty while shooting; activate for a burst of speed and slow resist.", "cd": "16s"}, {"name": "Intensifying Magazine", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+20% max ammo"], "effect": "Weapon damage ramps up the longer you keep firing.", "cd": null}, {"name": "Kinetic Dash", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+1 stamina", "+12% stamina recovery", "+30% fire rate on proc"], "effect": "Dash-jumping grants fire rate and bonus ammo until your next reload.", "cd": null}, {"name": "Long Range", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+0.75 m/s sprint", "+8% falloff range"], "effect": "Extra weapon damage against targets beyond a minimum distance.", "cd": null}, {"name": "Melee Charge", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+50% heavy melee distance", "+10% melee damage", "+6% bullet resist"], "effect": "Your next heavy melee deals increased damage.", "cd": "5s"}, {"name": "Mystic Shot", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+7 spirit power"], "effect": "Your next bullet deals bonus spirit damage.", "cd": "8s"}, {"name": "Opening Rounds", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+7 spirit power"], "effect": "Extra weapon damage against enemies above 50% health.", "cd": null}, {"name": "Recharging Rush", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+20% max ammo", "+10 weapon damage"], "effect": "Dealing heavy weapon damage restores charges on your charged abilities.", "cd": "25s"}, {"name": "Slowing Bullets", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["Up to −30% move speed", "−22% dash distance"], "effect": "Your bullets build up a movement slow on enemies.", "cd": null}, {"name": "Spirit Shredder", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["−8% spirit resist on target", "+10% spirit lifesteal"], "effect": "Bullets lower the target's spirit resist and give you spirit lifesteal.", "cd": null}, {"name": "Split Shot", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "active", "stats": ["Fires 5 bullets per shot", "+8% weapon damage per hero hit (max 5)"], "effect": "Activate for multishot; hitting several heroes stacks bonus damage.", "cd": "27s"}, {"name": "Stalker", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["Quieter footsteps", "+75 bonus health"], "effect": "Shooting from behind applies a wound that lowers bullet resist and reveals the target.", "cd": "6s"}, {"name": "Swift Striker", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "stat", "stats": ["+20% fire rate", "+0.75 m/s sprint"], "effect": "", "cd": null}, {"name": "Titanic Magazine", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "stat", "stats": ["+100% ammo", "+14% weapon damage"], "effect": "", "cd": null}, {"name": "Weakening Headshot", "cat": "weapon", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+60 bonus health", "−12% bullet resist on target"], "effect": "Headshots reduce the target's bullet resist for 12s.", "cd": null}, {"name": "Alchemical Fire", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+10 spirit power", "10m zone, 5s"], "effect": "Throws a flask that leaves a burning zone dealing spirit damage and lowering bullet resist.", "cd": "30s"}, {"name": "Ballistic Enchantment", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+22% ability range", "+20% weapon damage per hero hit"], "effect": "Imbue an ability: it gains range, and each unique hero it hits stacks weapon damage.", "cd": null}, {"name": "Berserker", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+8% bullet resist", "+7% weapon damage per stack (max 10)"], "effect": "Weapon damage rises as you take sustained damage.", "cd": null}, {"name": "Blood Tribute", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "toggle", "stats": ["+9% spirit resist", "+4 out-of-combat regen", "+40% fire rate while on"], "effect": "Toggle on to drain your health per second for fire rate, debuff resist and speed.", "cd": null}, {"name": "Burst Fire", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+50% slide distance", "+35% fire rate on proc"], "effect": "Hitting an enemy hero briefly boosts fire rate and move speed.", "cd": "9s"}, {"name": "Cultist Sacrifice", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+2 out-of-combat regen", "+30% weapon damage and bullet resist vs NPCs"], "effect": "Consume an NPC for bonus souls and a long-lasting buff.", "cd": "260s"}, {"name": "Escalating Resilience", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+35% max ammo", "+100 bonus health", "+18% weapon damage"], "effect": "Bullets hitting heroes stack bullet resist, up to 30%.", "cd": null}, {"name": "Express Shot", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+50% bullet velocity", "+5% fire rate"], "effect": "After a short pause, your next shot fires two fast bolts with bonus damage.", "cd": "3s"}, {"name": "Headhunter", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+5% weapon damage", "+75 bonus health", "+75 headshot damage"], "effect": "Headshots deal bonus damage, heal you and briefly speed you up.", "cd": "8s"}, {"name": "Heroic Aura", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+1.5 m/s move speed", "+17% bullet resist", "35m aura"], "effect": "Nearby troopers fire faster; activate to give nearby allies speed and fire rate.", "cd": "22s"}, {"name": "Hollow Point", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+4.5 out-of-combat regen", "+150 bonus health"], "effect": "Above 65% health, you deal extra damage and shred bullet resist.", "cd": null}, {"name": "Hunter's Aura", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+125 bonus health", "+1 m/s sprint"], "effect": "Nearby enemies lose bullet resist and fire rate; tripled against a lone hero.", "cd": null}, {"name": "Point Blank", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+100 health", "+30% melee resist"], "effect": "At close range you deal more weapon damage and your bullets slow.", "cd": null}, {"name": "Shadow Weave", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+5 out-of-combat regen", "+2 m/s sprint"], "effect": "Go stealthed for up to 13s; attacking ends it and grants a short ambush buff.", "cd": "20s"}, {"name": "Sharpshooter", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+20% falloff range", "+25% zoom", "+1 m/s sprint"], "effect": "Extra weapon damage against distant targets.", "cd": null}, {"name": "Spirit Rend", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+100 bonus health", "−8% spirit resist on target", "+10% spirit lifesteal"], "effect": "Bullets stack spirit resist reduction; headshots stack more.", "cd": "2s"}, {"name": "Tesla Bullets", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["33 shock damage", "15% chance", "4 jumps"], "effect": "Bullets can shock a target, and the shock arcs to nearby enemies.", "cd": null}, {"name": "Toxic Bullets", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["1.9% max HP/s bleed", "−35% healing on target"], "effect": "Bullets build up a bleed that drains max health and cuts healing.", "cd": null}, {"name": "Weighted Shots", "cat": "weapon", "tier": 3, "cost": 3200, "kind": "stat", "stats": ["+30% weapon damage", "−30% bullet velocity", "+22% debuff resist"], "effect": "", "cd": null}, {"name": "Armor Piercer", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+35% bullet velocity", "55% proc chance"], "effect": "Bullets can become unavoidable, piercing enemies and ignoring bullet resist.", "cd": null}, {"name": "Capacitor", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "active", "stats": ["43 shock damage", "20% chance", "6 jumps", "+5% fire rate"], "effect": "Chaining shocks on hit; activate to fire a slowing bolt that strips buffs.", "cd": "40s"}, {"name": "Crippling Headshot", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+150 bonus health", "−16% bullet and spirit resist on target"], "effect": "Headshots shred both resists and can cut the target's healing.", "cd": null}, {"name": "Crushing Fists", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+60% heavy melee distance", "+22% melee damage", "+12% bullet resist"], "effect": "Melee restores ammo and stacks a resist debuff that stuns at max stacks.", "cd": "5s"}, {"name": "Frenzy", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+15% fire rate", "+160 health", "+10% bullet lifesteal", "+30% debuff resist"], "effect": "Below 40% health you gain a big fire rate and speed boost.", "cd": null}, {"name": "Glass Cannon", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+80% weapon damage", "−13% max health"], "effect": "Each hero kill adds permanent fire rate (max 8); dying removes a stack.", "cd": null}, {"name": "Lucky Shot", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+30% ammo", "+100% bonus damage on proc", "25% chance"], "effect": "Bullets can randomly empower for big bonus damage.", "cd": null}, {"name": "Ricochet", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+20% fire rate", "65% ricochet damage", "2 targets"], "effect": "Bullets bounce to nearby enemies and carry your on-hit effects.", "cd": null}, {"name": "Silencer", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+12% spirit resist", "−25% spirit damage on target"], "effect": "Bullets weaken the target's spirit damage and build up a silence.", "cd": null}, {"name": "Spellslinger", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+5% cooldown reduction", "stacking fire rate and reload speed"], "effect": "Casting abilities or items stacks fire rate and faster reloads (6 max).", "cd": null}, {"name": "Spiritual Overflow", "cat": "weapon", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+13% ability duration", "+13% spirit lifesteal"], "effect": "Hitting heroes charges a buff of bonus fire rate and spirit power.", "cd": null}, {"name": "Haunting Shot", "cat": "weapon", "tier": 5, "cost": null, "kind": "passive", "stats": ["10% current-HP spirit damage", "−40% enemy damage and healing"], "effect": "Your next bullet pierces, slows, and cuts the target's damage and healing for 4s.", "cd": "2.5s"}, {"name": "Infinite Rounds", "cat": "weapon", "tier": 5, "cost": null, "kind": "passive", "stats": ["+200% bullet velocity", "+35% fire rate"], "effect": "Infinite ammo; bullets often become unavoidable and ignore bullet resist.", "cd": null}, {"name": "Runed Gauntlets", "cat": "weapon", "tier": 5, "cost": null, "kind": "passive", "stats": ["+150% heavy melee distance", "+50% melee resist", "+30% melee damage"], "effect": "Heavy melee pierces parries and cuts your other cooldowns by 16% per hit.", "cd": "10s"}, {"name": "Extra Health", "cat": "vitality", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+210 bonus health"], "effect": "", "cd": null}, {"name": "Extra Regen", "cat": "vitality", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+2.5 health regen", "+1.5 out-of-combat regen"], "effect": "", "cd": null}, {"name": "Extra Stamina", "cat": "vitality", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+1 stamina", "+12% stamina recovery"], "effect": "", "cd": null}, {"name": "Grit", "cat": "vitality", "tier": 1, "cost": 800, "kind": "active", "stats": ["+1 out-of-combat regen", "200 barrier"], "effect": "Activate for a short barrier.", "cd": "60s"}, {"name": "Healing Rite", "cat": "vitality", "tier": 1, "cost": 800, "kind": "active", "stats": ["300 total regen", "+2 m/s sprint", "30m range"], "effect": "Gives you or an ally regen and sprint until they take damage from enemies.", "cd": "70s"}, {"name": "Melee Lifesteal", "cat": "vitality", "tier": 1, "cost": 800, "kind": "passive", "stats": ["+12% melee damage", "100 heal on hit"], "effect": "Your next melee hit heals you (30% vs non-heroes).", "cd": "8s"}, {"name": "Rebuttal", "cat": "vitality", "tier": 1, "cost": 800, "kind": "passive", "stats": ["+75 bonus health", "+18% melee resist", "−1.75s parry cooldown"], "effect": "Parrying a hero heals you, reflects damage and boosts your melee.", "cd": null}, {"name": "Sprint Boots", "cat": "vitality", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+2 m/s sprint", "+2 out-of-combat regen"], "effect": "", "cd": null}, {"name": "Battle Vest", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+18% bullet resist", "+3 out-of-combat regen"], "effect": "Above 65% health you gain weapon damage and fire rate.", "cd": null}, {"name": "Bullet Lifesteal", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "stat", "stats": ["+13% bullet lifesteal", "+70 bonus health", "+6% weapon damage"], "effect": "", "cd": null}, {"name": "Debuff Reducer", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+90 health", "+25% debuff resist"], "effect": "Shortens negative effects on you.", "cd": null}, {"name": "Enchanter's Emblem", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+18% spirit resist"], "effect": "Above 65% health you gain spirit power and cooldown reduction.", "cd": null}, {"name": "Enduring Speed", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+2 m/s move speed", "+25% slow resist"], "effect": "Weakens slows applied to you.", "cd": null}, {"name": "Guardian Ward", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "active", "stats": ["250 barrier", "+2.75 m/s", "+8% ability range"], "effect": "Gives a target a barrier and speed; half cooldown when cast on allies.", "cd": "60s"}, {"name": "Healbane", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+7 spirit power"], "effect": "Your spirit damage cuts enemy healing by 35%; killing an affected hero heals you 275.", "cd": null}, {"name": "Healing Booster", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+3 health regen", "+1 out-of-combat regen"], "effect": "+20% healing effectiveness.", "cd": null}, {"name": "Reactive Barrier", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["325 bullet shield", "+1 out-of-combat regen"], "effect": "Getting stunned, chained, immobilized or slept grants a barrier and a stamina point.", "cd": "55s"}, {"name": "Restorative Locket", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "active", "stats": ["+8% spirit resist", "16 heal per stack (25 max)"], "effect": "Stores stacks when enemies cast nearby; spend them to heal an ally and restore stamina.", "cd": "20s"}, {"name": "Return Fire", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "active", "stats": ["+10% bullet resist", "65% damage returned"], "effect": "Activate to automatically shoot back at anyone who damages you.", "cd": "23s"}, {"name": "Spirit Lifesteal", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "stat", "stats": ["+13% spirit lifesteal", "+90 bonus health", "+6 spirit power"], "effect": "", "cd": null}, {"name": "Spirit Shielding", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["300 barrier", "+18% spirit resist", "+2.5 out-of-combat regen"], "effect": "Taking heavy spirit damage from heroes triggers a barrier.", "cd": "45s"}, {"name": "Trophy Collector", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+2 m/s sprint", "+2 out-of-combat regen"], "effect": "Kills and assists stack health, sprint, range and soul income that persist through death.", "cd": null}, {"name": "Weapon Shielding", "cat": "vitality", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["300 barrier", "+18% bullet resist", "+2.5 out-of-combat regen"], "effect": "Taking heavy weapon damage from heroes triggers a barrier.", "cd": "35s"}, {"name": "Bullet Resilience", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+30% bullet resist", "+3 out-of-combat regen"], "effect": "Gains extra bullet resist below 50% health.", "cd": null}, {"name": "Counterspell", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+50 bonus health", "+5 spirit power"], "effect": "Your next parry also blocks enemy abilities and items, granting speed and spirit power.", "cd": "23s"}, {"name": "Dispel Magic", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+10% spirit resist", "250 heal", "+2 m/s"], "effect": "Removes non-ultimate debuffs; heals and speeds you if any were removed.", "cd": "45s"}, {"name": "Fortitude", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+375 bonus health"], "effect": "Regenerates 2.25% max HP after 10s without damage; above 75% health gain speed and weapon damage.", "cd": null}, {"name": "Fury Trance", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+14% bullet lifesteal", "+100 bonus health"], "effect": "Big fire rate and bullet resist boost, but you're silenced and can't use stamina.", "cd": "18s"}, {"name": "Healing Nova", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+8 spirit power", "+5% ability range", "325 heal"], "effect": "Heals you and nearby allies.", "cd": "60s"}, {"name": "Lifestrike", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+16% melee damage", "+125 bonus health"], "effect": "Melee hits slow enemies and heal you.", "cd": "4s"}, {"name": "Majestic Leap", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "active", "stats": ["200 barrier"], "effect": "Launches you high into the air with a barrier; recast to drop faster.", "cd": "45s"}, {"name": "Metal Skin", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+12% bullet resist"], "effect": "Become immune to bullets briefly, at the cost of move speed and dashes.", "cd": "24s"}, {"name": "Rescue Beam", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+0.75 m/s sprint", "+6% ability range"], "effect": "Channel a heal on an ally (and yourself); can pull them to you once.", "cd": "60s"}, {"name": "Spirit Resilience", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+30% spirit resist below 50% HP", "+3 out-of-combat regen"], "effect": "Gains extra spirit resist when low.", "cd": null}, {"name": "Stamina Mastery", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+2 stamina", "+18% stamina recovery", "+23% air jump/dash distance"], "effect": "Allows one extra air jump or air dash before landing.", "cd": null}, {"name": "Veil Walker", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+125 bonus health", "+6 spirit power"], "effect": "Walking through a cosmic veil grants stealth and move speed.", "cd": "15s"}, {"name": "Warp Stone", "cat": "vitality", "tier": 3, "cost": 3200, "kind": "active", "stats": ["11m teleport", "+30% bullet resist after"], "effect": "Blinks you forward with a short bullet resist buff.", "cd": "16s"}, {"name": "Cheat Death", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+200 bonus health", "+15% spirit resist"], "effect": "Lethal damage instead leaves you briefly unkillable, with reduced damage and healing.", "cd": "90s"}, {"name": "Colossus", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+25% base health", "+15% weapon damage"], "effect": "Grow larger, gain big resists and slow nearby enemies.", "cd": "37s"}, {"name": "Divine Barrier", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "active", "stats": ["600 barrier", "+10% ability range", "+2.75 m/s"], "effect": "Cleanses non-stun debuffs and grants a barrier and speed; half cooldown on allies.", "cd": "45s"}, {"name": "Diviner's Kevlar", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+15% ability duration", "+10% ultimate CDR", "1000 barrier"], "effect": "Casting your ultimate grants bullet and spirit shields plus spirit power.", "cd": "40s"}, {"name": "Healing Tempo", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+25% healing effectiveness", "+10% spirit resist", "+6 health regen"], "effect": "Healing yourself or an ally grants fire rate and move speed.", "cd": null}, {"name": "Indomitable", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+2 out-of-combat regen", "+10% bullet and spirit resist"], "effect": "Cleanses your next stun, immobilize, sleep or silence and grants a barrier.", "cd": "55s"}, {"name": "Infuser", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+13% spirit lifesteal", "+100 bonus health", "+10% spirit resist"], "effect": "Activate for a burst of spirit lifesteal and spirit power.", "cd": "30s"}, {"name": "Inhibitor", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+25% weapon damage", "+150 bonus health"], "effect": "Bullets reduce the target's damage output and healing.", "cd": null}, {"name": "Juggernaut", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+50% slow resist", "+2.5 m/s", "+25% melee resist", "+8 health regen"], "effect": "Enemies who shoot you have their fire rate slowed.", "cd": null}, {"name": "Leech", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "stat", "stats": ["+28% spirit and bullet lifesteal", "+160 bonus health", "+12% weapon damage", "+12 spirit power"], "effect": "", "cd": null}, {"name": "Phantom Strike", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+15% weapon damage", "+8 spirit power", "82 damage"], "effect": "Teleport to an enemy, dragging them down with damage, a slow and a disarm.", "cd": "35s"}, {"name": "Plated Armor", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+130 bonus health"], "effect": "Chance to deflect bullets entirely or block their on-hit effects.", "cd": null}, {"name": "Siphon Bullets", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+15% weapon damage", "+10% bullet resist"], "effect": "Bullets steal max HP temporarily; you keep it if the target dies.", "cd": null}, {"name": "Spellbreaker", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+18% spirit resist", "+25% debuff resist"], "effect": "The next heavy spirit hit on you is reduced by 65%.", "cd": "9s"}, {"name": "Unstoppable", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+25% debuff resist", "+125 bonus health"], "effect": "Become immune to stun, silence, sleep, root and disarm (not usable while stunned).", "cd": "60s"}, {"name": "Vampiric Burst", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+13% bullet lifesteal", "+10% bullet resist", "+100 bonus health"], "effect": "Activate for lifesteal, fire rate and bonus ammo beyond your magazine.", "cd": "30s"}, {"name": "Witchmail", "cat": "vitality", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+22% spirit resist", "+14 spirit power"], "effect": "Heavy spirit hits on you reduce a random ability's cooldown.", "cd": null}, {"name": "Celestial Blessing", "cat": "vitality", "tier": 5, "cost": null, "kind": "active", "stats": ["60% heal", "+100% stamina recovery", "+5 m/s"], "effect": "Cleanses and heals every ally on the map.", "cd": "30s"}, {"name": "Cloak of Opportunity", "cat": "vitality", "tier": 5, "cost": null, "kind": "passive", "stats": ["500 barrier", "+3 m/s"], "effect": "Blocks the next crowd-control effect and grants 4s of Unstoppable.", "cd": "12s"}, {"name": "Electric Slippers", "cat": "vitality", "tier": 5, "cost": null, "kind": "passive", "stats": ["+2 stamina", "+80% slide distance"], "effect": "While sliding you evade bullets, fire faster, and shock nearby enemies.", "cd": null}, {"name": "Eternal Gift", "cat": "vitality", "tier": 5, "cost": null, "kind": "passive", "stats": ["Random permanent stat rolls"], "effect": "Periodically rolls a permanent stat boost and cuts your next respawn by 70%.", "cd": "165s"}, {"name": "Nullification Burst", "cat": "vitality", "tier": 5, "cost": null, "kind": "active", "stats": ["+40% debuff resist", "+300 bonus health"], "effect": "A 7s aura that damages, strips buffs, and blocks healing and stamina.", "cd": "18s"}, {"name": "Seraphim Wings", "cat": "vitality", "tier": 5, "cost": null, "kind": "passive", "stats": ["−70% gravity", "+120% stamina recovery", "+100% air control"], "effect": "While airborne: +40% damage, −40% damage taken, unlimited air jumps and dashes.", "cd": null}, {"name": "Shadow Strike", "cat": "vitality", "tier": 5, "cost": null, "kind": "active", "stats": ["+3 stamina", "+350 bonus health"], "effect": "Spending stamina turns you invisible; melee from stealth steals resists.", "cd": null}, {"name": "Extra Charge", "cat": "spirit", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+1 ability charge", "+7 spirit power for charged abilities"], "effect": "", "cd": null}, {"name": "Extra Spirit", "cat": "spirit", "tier": 1, "cost": 800, "kind": "stat", "stats": ["+10 spirit power"], "effect": "", "cd": null}, {"name": "Golden Goose Egg", "cat": "spirit", "tier": 1, "cost": 800, "kind": "active", "stats": ["+1 m/s sprint", "+1 out-of-combat regen"], "effect": "Hatch it for souls and permanent buffs; worth more the longer you hold it.", "cd": null}, {"name": "Mystic Burst", "cat": "spirit", "tier": 1, "cost": 800, "kind": "passive", "stats": ["40 bonus damage"], "effect": "Big spirit hits deal extra damage on a cooldown.", "cd": "14s"}, {"name": "Mystic Expansion", "cat": "spirit", "tier": 1, "cost": 800, "kind": "passive", "stats": ["+20% ability range"], "effect": "Imbue an ability to extend its range and radius.", "cd": null}, {"name": "Mystic Regeneration", "cat": "spirit", "tier": 1, "cost": 800, "kind": "passive", "stats": ["+50 health", "4 HP/s regen for 7s"], "effect": "Spirit damage on heroes grants regen, stacking per hero.", "cd": null}, {"name": "Rusted Barrel", "cat": "spirit", "tier": 1, "cost": 800, "kind": "active", "stats": ["+60 health", "−35% target fire rate", "+8% bullet resist"], "effect": "Slows an enemy's fire rate for 5s.", "cd": "16s"}, {"name": "Spirit Strike", "cat": "spirit", "tier": 1, "cost": 800, "kind": "passive", "stats": ["40 spirit damage", "−6% spirit resist on target"], "effect": "Melee hits on heroes add spirit damage and shred spirit resist.", "cd": "8s"}, {"name": "Arcane Surge", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+1 stamina", "+12% stamina recovery"], "effect": "Your next ability after a dash-jump gets bonus range, duration and power.", "cd": null}, {"name": "Bullet Resist Shredder", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+9% weapon damage", "+9% bullet resist", "−10% bullet resist on target"], "effect": "Spirit damage weakens enemies' bullet resist.", "cd": null}, {"name": "Cold Front", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "active", "stats": ["+6% spirit resist", "95 damage", "60% slow", "7m"], "effect": "Release an expanding ice blast that damages and slows.", "cd": "25s"}, {"name": "Compress Cooldown", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+18% cooldown reduction"], "effect": "Imbue an ability to shorten its cooldown.", "cd": null}, {"name": "Duration Extender", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+22% ability duration"], "effect": "Imbue an ability to lengthen its duration.", "cd": null}, {"name": "Improved Spirit", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "stat", "stats": ["+18 spirit power", "+1.5 out-of-combat regen"], "effect": "", "cd": null}, {"name": "Mystic Slow", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+50 health", "+0.75 m/s sprint", "30% slow"], "effect": "Spirit damage slows the target.", "cd": null}, {"name": "Mystic Vulnerability", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+8% spirit resist", "−8% spirit resist on target"], "effect": "Spirit damage lowers the target's spirit resist.", "cd": null}, {"name": "Quicksilver Reload", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["44 damage", "+10% fire rate", "full reload"], "effect": "Casting the imbued ability reloads your gun and empowers your bullets.", "cd": "18s"}, {"name": "Slowing Hex", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "active", "stats": ["−20% move speed", "−30% dash distance", "25m"], "effect": "Slows an enemy and silences their movement abilities and items.", "cd": "29s"}, {"name": "Spirit Sap", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "active", "stats": ["+75 health", "−12% spirit resist", "−30 spirit power on target"], "effect": "Weakens an enemy's spirit resist and spirit power for 12s.", "cd": "18s"}, {"name": "Suppressor", "cat": "spirit", "tier": 2, "cost": 1600, "kind": "passive", "stats": ["+6 spirit power", "+75 health", "−30% target fire rate"], "effect": "Spirit damage reduces the target's fire rate.", "cd": null}, {"name": "Decay", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+8 spirit power", "+90 health", "2.63% HP/s", "−50% healing"], "effect": "Afflicts a target with current-health damage over time and anti-heal.", "cd": "30s"}, {"name": "Disarming Hex", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+100 health", "+0.75 m/s sprint", "−13% bullet resist on target"], "effect": "Disarms an enemy and weakens their bullet resist.", "cd": "16s"}, {"name": "Greater Expansion", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+10% spirit resist", "+30% ability range"], "effect": "Increases range and radius of abilities and items.", "cd": null}, {"name": "Knockdown", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+100 health", "0.5s stun", "48m"], "effect": "Stuns a target after a 2s delay, longer if they're airborne.", "cd": "35s"}, {"name": "Radiant Regeneration", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+90 health", "65 heal on cast", "+1.75 m/s"], "effect": "Casting an ability heals you and gives a short speed boost.", "cd": "7s"}, {"name": "Rapid Recharge", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "stat", "stats": ["+2 charges", "30% faster charge time", "+14 spirit power for charged abilities"], "effect": "", "cd": null}, {"name": "Silence Wave", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "active", "stats": ["+75 health", "100 damage", "3s silence"], "effect": "Launches an expanding wave that damages and silences.", "cd": "42s"}, {"name": "Spirit Snatch", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+7% melee damage", "+100 health", "50 spirit damage"], "effect": "Melee hits on heroes steal spirit resist and spirit power.", "cd": "6s"}, {"name": "Superior Cooldown", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+4 out-of-combat regen", "+20% cooldown reduction"], "effect": "Reduces ability and item cooldowns.", "cd": null}, {"name": "Superior Duration", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+8% bullet resist", "+28% ability duration"], "effect": "Lengthens ability and item durations.", "cd": null}, {"name": "Surge of Power", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+25 imbued spirit power"], "effect": "Casting the imbued ability grants fire rate and move speed.", "cd": "14s"}, {"name": "Tankbuster", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+75 health", "40 + 7.5% current HP damage"], "effect": "Ability hits over 165 damage deal extra current-health damage.", "cd": "14s"}, {"name": "Torment Pulse", "cat": "spirit", "tier": 3, "cost": 3200, "kind": "passive", "stats": ["+125 health", "+18% melee resist", "27 damage per pulse"], "effect": "Repeatedly pulses spirit damage at the two nearest enemies.", "cd": "1.4s"}, {"name": "Arctic Blast", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+10% spirit resist", "175 damage", "1s freeze", "16m"], "effect": "Freezes enemies around you, then slows them; frozen targets take more damage.", "cd": "24s"}, {"name": "Boundless Spirit", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "stat", "stats": ["+15% spirit power", "+35 spirit power", "+100 health", "+4 out-of-combat regen"], "effect": "", "cd": null}, {"name": "Cursed Relic", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["−25% target damage", "3.25s silence", "20m"], "effect": "Curses an enemy: interrupts, silences, disarms and blocks items.", "cd": "55s"}, {"name": "Echo Shard", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+5% spirit resist", "+5% bullet resist"], "effect": "Resets the cooldown of the imbued non-ultimate ability.", "cd": "30s"}, {"name": "Escalating Exposure", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+17% spirit resist", "+4.5% spirit amp per stack (12 max)"], "effect": "Your spirit damage stacks an amp on that target.", "cd": null}, {"name": "Ethereal Shift", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+20 spirit power", "+30% spirit resist", "+2.5 m/s"], "effect": "Become invulnerable and untargetable for 3s, then gain bonus stats.", "cd": "37s"}, {"name": "Focus Lens", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+13% fire rate", "4.5s silence", "25m"], "effect": "Silences a target and echoes back part of the damage dealt during it.", "cd": "43s"}, {"name": "Lightning Scroll", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+75 health", "0.75s stun", "150 damage"], "effect": "Your ultimate also stuns and later deals bonus spirit damage.", "cd": null}, {"name": "Magic Carpet", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+15% ability duration", "+125 health", "+7 m/s flight"], "effect": "Summon a carpet to fly on for 12s, immune to slows.", "cd": "32s"}, {"name": "Mercurial Magnum", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+20% max ammo", "+28% base bullet damage", "+25% fire rate"], "effect": "Casting the imbued ability reloads and adds spirit damage to bullets.", "cd": "14s"}, {"name": "Mystic Reverb", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+8% spirit lifesteal", "50% echo damage", "40% slow"], "effect": "Imbued ability hits slow, then echo onto nearby enemies.", "cd": "6.25s"}, {"name": "Refresher", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["No stats"], "effect": "Resets all ability cooldowns and restores charges.", "cd": "300s"}, {"name": "Scourge", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+125 health", "+20% debuff resist", "damage aura"], "effect": "Gives yourself or an ally spirit resist and a max-HP damage aura.", "cd": "35s"}, {"name": "Spirit Burn", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+6% ability range", "−70% healing on burned enemies"], "effect": "Dealing 500+ spirit damage triggers an explosion and lingering burn.", "cd": "20s"}, {"name": "Transcendent Cooldown", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "passive", "stats": ["+4 out-of-combat regen", "+25% cooldown reduction"], "effect": "Reduces ability and item cooldowns.", "cd": null}, {"name": "Vortex Web", "cat": "spirit", "tier": 4, "cost": 6400, "kind": "active", "stats": ["+8% ability range", "11m pull", "−35% move speed"], "effect": "Pulls enemies into a web and applies Slowing Hex.", "cd": "42s"}, {"name": "Frostbite Charm", "cat": "spirit", "tier": 5, "cost": null, "kind": "passive", "stats": ["+50% imbued CDR", "+70 imbued spirit power"], "effect": "Imbued ability hits freeze the target and deal 200 bonus damage.", "cd": "10s"}, {"name": "Mystic Conduit", "cat": "spirit", "tier": 5, "cost": null, "kind": "passive", "stats": ["+40% ability range", "+40% cooldown reduction", "25m aura"], "effect": "Shares buffs with nearby allies; heavy damage heals your team 700.", "cd": "25s"}, {"name": "Mystical Piano", "cat": "spirit", "tier": 5, "cost": null, "kind": "active", "stats": ["No stats"], "effect": "Drops a piano: stuns, drains stamina, then dazes enemies.", "cd": "23s"}, {"name": "Omnicharge Signet", "cat": "spirit", "tier": 5, "cost": null, "kind": "passive", "stats": ["+70% faster charges", "+30% charged CDR", "+50 spirit power"], "effect": "Adds extra charges to all your non-ultimate abilities.", "cd": null}, {"name": "Prism Blast", "cat": "spirit", "tier": 5, "cost": null, "kind": "active", "stats": ["270 spirit DPS"], "effect": "Become untargetable while spinning lasers fire around you for 6s.", "cd": "40s"}, {"name": "Shrink Ray", "cat": "spirit", "tier": 5, "cost": null, "kind": "active", "stats": ["−50% size", "+5 m/s", "+20% fire rate"], "effect": "Shrinks a target (or yourself), making them faster and smaller.", "cd": "30s"}, {"name": "Unstable Concoction", "cat": "spirit", "tier": 5, "cost": null, "kind": "active", "stats": ["Huge temporary stat boost"], "effect": "Become Unstoppable and supercharged, then explode to stun and damage nearby enemies.", "cd": "25s"}];
+const CAT = {weapon:'Weapon',vitality:'Vitality',spirit:'Spirit'};
+const TIER = {1:'Tier 1',2:'Tier 2',3:'Tier 3',4:'Tier 4',5:'Legendary'};
+const KIND = {stat:'Stats only',passive:'Passive',active:'Active',toggle:'Toggle'};
+const CATVAR = {weapon:'var(--weapon)',vitality:'var(--vital)',spirit:'var(--spirit)'};
+
+const slug = s => s.toLowerCase().replace(/'/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cost = i => i.cost ? i.cost.toLocaleString('en-US') + ' souls' : 'Street Brawl';
+function initials(n){const w=n.replace(/'/g,'').split(/[\s-]+/).filter(Boolean);return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase()}
+const order = {weapon:0,vitality:1,spirit:2};
+ITEMS.forEach(i=>i.slug=slug(i.name));
+ITEMS.sort((a,b)=>a.tier-b.tier||order[a.cat]-order[b.cat]||a.name.localeCompare(b.name));
+
+const state={q:'',cats:new Set(),tiers:new Set(),active:false,cur:null};
+try{const s=JSON.parse(localStorage.getItem('icodex-f')||'{}');(s.cats||[]).forEach(c=>state.cats.add(c));(s.tiers||[]).forEach(t=>state.tiers.add(+t));state.active=!!s.active}catch(e){}
+const save=()=>{try{localStorage.setItem('icodex-f',JSON.stringify({cats:[...state.cats],tiers:[...state.tiers],active:state.active}))}catch(e){}};
+
+function hl(text){
+  const t=esc(text); if(!state.q) return t;
+  const q=state.q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return t.replace(new RegExp('('+q+')','ig'),'<mark class="hit">$1</mark>');
+}
+function hay(i){return (i.name+' '+i.stats.join(' ')+' '+i.effect+' '+CAT[i.cat]).toLowerCase()}
+function filtered(){
+  const q=state.q.toLowerCase();
+  return ITEMS.filter(i=>(!q||hay(i).includes(q))
+    &&(!state.cats.size||state.cats.has(i.cat))
+    &&(!state.tiers.size||state.tiers.has(i.tier))
+    &&(!state.active||i.kind==='active'||i.kind==='toggle'));
+}
+
+function renderList(){
+  const items=filtered();
+  document.getElementById('count').textContent=`${items.length} of ${ITEMS.length} items`;
+  const ul=document.getElementById('list');
+  let html='',last=null;
+  for(const i of items){
+    if(i.tier!==last){last=i.tier;
+      html+=`<li class="grouph"><span>${TIER[i.tier]}</span><span>${i.cost?i.cost.toLocaleString('en-US'):'—'}</span></li>`}
+    html+=`<li><button data-s="${i.slug}" aria-current="${state.cur===i.slug}">
+      <span class="mono ${i.cat}">${initials(i.name)}</span>
+      <span class="li-txt"><span class="li-name">${hl(i.name)}</span><br>
+      <span class="li-sub">${CAT[i.cat]} · ${KIND[i.kind]}${i.cd?' · '+esc(i.cd):''}</span></span></button></li>`;
+  }
+  ul.innerHTML=html||`<li style="padding:14px;color:var(--muted)">No item matches “${esc(state.q)}”.</li>`;
+}
+
+function renderItem(s){
+  const i=ITEMS.find(x=>x.slug===s)||ITEMS[0];
+  state.cur=i.slug;
+  const peers=ITEMS.filter(x=>x.cat===i.cat&&x.tier===i.tier);
+  const effectBlock = i.kind==='stat'
+    ? `<section class="effect" style="--accent-cat:var(--line)"><h3>No effect <span class="kind stat">Stats only</span></h3><p style="color:var(--muted)">This item only adds the stats above.</p></section>`
+    : `<section class="effect" style="--accent-cat:${CATVAR[i.cat]}"><h3>${KIND[i.kind]} effect <span class="kind ${i.kind}">${KIND[i.kind]}</span></h3>
+        <p>${hl(i.effect)}</p><div class="cd">${i.cd?(i.kind==='active'?'Cooldown ':'Internal cooldown ')+esc(i.cd):'No cooldown'}</div></section>`;
+  document.getElementById('dossier').innerHTML=`
+    <section class="hero-head">
+      <div class="big-mono ${i.cat}" aria-hidden="true">${initials(i.name)}</div>
+      <div style="min-width:0"><h2>${esc(i.name)}</h2>
+        <div class="tags">
+          <span class="tag ${i.cat}">${CAT[i.cat]}</span>
+          <span class="tag">${TIER[i.tier]}</span>
+          <span class="tag">${cost(i)}</span>
+          <span class="tag">${KIND[i.kind]}</span>
+        </div></div>
+    </section>
+    <div class="sec-h">Stats</div>
+    <ul class="statlist">${i.stats.map(x=>`<li>${hl(x)}</li>`).join('')}</ul>
+    <div class="sec-h">Effect</div>
+    ${effectBlock}
+    <div class="sec-h">Other ${CAT[i.cat]} · ${TIER[i.tier]} items</div>
+    <section class="peers">${peers.map(p=>`<button class="peer" data-s="${p.slug}" aria-current="${p.slug===i.slug}">
+      <span class="mono ${p.cat}">${initials(p.name)}</span>
+      <span style="min-width:0"><b>${esc(p.name)}</b><small>${esc(p.kind==='stat'?p.stats.join(' · '):p.effect)}</small></span></button>`).join('')}</section>`;
+  renderList();
+}
+
+function go(s){
+  renderItem(s);
+  try{history.replaceState(null,'','#'+s)}catch(_){}
+}
+document.getElementById('list').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-s]'); if(!b) return;
+  go(b.dataset.s);
+  if(window.matchMedia('(max-width:820px)').matches) document.getElementById('dossier').scrollIntoView({behavior:'smooth',block:'start'});
+});
+document.getElementById('dossier').addEventListener('click',e=>{
+  const b=e.target.closest('button.peer'); if(!b) return; go(b.dataset.s);
+});
+function refilter(){
+  save();
+  const f=filtered();
+  if(f.length&&!f.some(x=>x.slug===state.cur)) renderItem(f[0].slug); else renderList();
+}
+document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value.trim();refilter();renderItem(state.cur)});
+document.querySelectorAll('.chip[data-cat]').forEach(b=>{
+  b.setAttribute('aria-pressed',state.cats.has(b.dataset.cat));
+  b.addEventListener('click',()=>{const c=b.dataset.cat;state.cats.has(c)?state.cats.delete(c):state.cats.add(c);b.setAttribute('aria-pressed',state.cats.has(c));refilter()});
+});
+document.querySelectorAll('.chip[data-tier]').forEach(b=>{
+  const t=+b.dataset.tier; b.setAttribute('aria-pressed',state.tiers.has(t));
+  b.addEventListener('click',()=>{state.tiers.has(t)?state.tiers.delete(t):state.tiers.add(t);b.setAttribute('aria-pressed',state.tiers.has(t));refilter()});
+});
+const fa=document.getElementById('f-active'); fa.setAttribute('aria-pressed',state.active);
+fa.addEventListener('click',()=>{state.active=!state.active;fa.setAttribute('aria-pressed',state.active);refilter()});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.id!=='q'){e.preventDefault();document.getElementById('q').focus()}});
+
+const initial=(location.hash||'').slice(1);
+const first=filtered()[0]||ITEMS[0];
+renderItem(ITEMS.some(i=>i.slug===initial)?initial:first.slug);
+</script>
+
+</body>
+</html>

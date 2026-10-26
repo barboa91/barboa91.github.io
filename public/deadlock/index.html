@@ -122,6 +122,12 @@ details.sharedwrap summary::-webkit-details-marker{display:none}
 details.sharedwrap summary .sec-h::before{content:"▸";margin-right:2px;transition:transform .15s}
 details.sharedwrap[open] summary .sec-h::before{transform:rotate(90deg)}
 .hit{background:color-mix(in srgb,var(--brass) 30%,transparent);color:inherit;border-radius:2px}
+.sitenav{display:flex;gap:4px;margin-top:12px}
+.sitenav a{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:4px}
+.sitenav a[aria-current="page"]{color:var(--brass-ink);background:var(--brass);border-color:var(--brass)}
+.sitenav a:hover{color:var(--fg)}
+.sitenav a[aria-current="page"]:hover{color:var(--brass-ink)}
+.sitenav a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 footer{margin-top:32px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
 footer a{color:var(--brass)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -134,6 +140,10 @@ footer a{color:var(--brass)}
     <div class="mast">
       <h1>Hero Codex</h1>
       <p>Every Deadlock hero, their innate traits, and the four abilities they cast, with all three upgrade tiers.</p>
+      <nav class="sitenav" aria-label="Codex pages">
+        <a href="https://alex-barbosa.com/deadlock/" aria-current="page">Heroes</a>
+        <a href="https://alex-barbosa.com/deadlock/items/">Items</a>
+      </nav>
     </div>
     <div class="legend" aria-label="Ability type legend">
       <span><i class="dot" style="background:var(--spirit)"></i>Active ability</span>
