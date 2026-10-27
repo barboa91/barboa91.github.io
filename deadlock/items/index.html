@@ -120,11 +120,11 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .innate.none{border-left-color:var(--line);color:var(--muted)}
 .innate.none p{color:var(--muted)}
 .innates{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
-.weapon{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--weapon);border-radius:8px;padding:14px 16px}
-.weapon h3{margin:0 0 8px;font:600 16px var(--body)}
-.weapon ul{margin:0;padding-left:18px;display:grid;gap:4px}
-.weapon li{font-size:14px}
-.weapon li::marker{color:var(--weapon)}
+.wpn{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--weapon);border-radius:8px;padding:14px 16px}
+.wpn h3{margin:0 0 8px;font:600 16px var(--body)}
+.wpn ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.wpn li{font-size:14px}
+.wpn li::marker{color:var(--weapon)}
 
 .abil{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 @media (max-width:1000px){.abil{grid-template-columns:minmax(0,1fr)}}
@@ -186,7 +186,8 @@ footer a{color:var(--brass)}
 .mono.weapon,.big-mono.weapon{background:linear-gradient(145deg,color-mix(in srgb,var(--weapon) 85%,#000),color-mix(in srgb,var(--weapon) 45%,#000))}
 .mono.vitality,.big-mono.vitality{background:linear-gradient(145deg,color-mix(in srgb,var(--vital) 85%,#000),color-mix(in srgb,var(--vital) 45%,#000))}
 .mono.spirit,.big-mono.spirit{background:linear-gradient(145deg,color-mix(in srgb,var(--spirit) 85%,#000),color-mix(in srgb,var(--spirit) 45%,#000))}
-.mono img,.big-mono img{width:86%;height:86%;object-fit:contain;display:block;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.mono img,.big-mono img{width:100%;height:100%;object-fit:cover;display:block;border-radius:inherit}
+.mono:has(img),.big-mono:has(img){background:var(--raise)}
 .tier-pip{font:500 10px/1 var(--mono);color:#fff;opacity:.9}
 .chip.weapon[aria-pressed="true"]{background:var(--weapon);border-color:var(--weapon);color:#140a02}
 .chip.vitality[aria-pressed="true"]{background:var(--vital);border-color:var(--vital);color:#08140a}
@@ -311,36 +312,48 @@ const ICON_API = 'https://api.deadlock-api.com/v1/assets/items?language=english'
 const ALIAS = {armorpiercer:['armorpiercingrounds','armorpiercing'], spiritshredder:['spiritshredderbullets'], goldengooseegg:['goldenegg'], heroicaura:['heroesaura']};
 const norm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
 function glyph(i){
-  const src = ICON[i.slug];
-  return src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode('${initials(i.name)}'))">` : initials(i.name);
+  const urls = ICON[i.slug];
+  if (!urls || !urls.length) return initials(i.name);
+  return `<img src="${esc(urls[0])}" alt="" decoding="async" data-alt="${esc(JSON.stringify(urls.slice(1)))}" data-fb="${initials(i.name)}" onerror="iconFail(this)">`;
+}
+/* If an image URL fails, try the next variant before falling back to the monogram. */
+function iconFail(img){
+  let rest=[]; try{ rest=JSON.parse(img.dataset.alt||'[]'); }catch(e){}
+  if (rest.length){ img.dataset.alt=JSON.stringify(rest.slice(1)); img.src=rest[0]; return; }
+  img.replaceWith(document.createTextNode(img.dataset.fb||''));
 }
 function applyIcons(list){
   const shop = list.filter(x => x && x.name && (x.shop_image_webp || x.shop_image || x.image_webp || x.image)
     && (x.type === 'upgrade' || x.item_slot_type));
-  const byName = new Map(shop.map(x => [norm(x.name), x]));
-  const pick = x => x.shop_image_webp || x.shop_image || x.image_webp || x.image;
+  // Several entries can share a name (old, disabled or other-mode versions). Group them and rank per item.
+  const byName = new Map();
+  for (const x of shop) { const k = norm(x.name); if (!byName.has(k)) byName.set(k, []); byName.get(k).push(x); }
+  const urls = x => [x.shop_image_webp, x.shop_image, x.image_webp, x.image].filter(Boolean).filter((u,ix,a)=>a.indexOf(u)===ix);
+  const best = (cands, i) => cands.slice().sort((a,b)=>score(b,i)-score(a,i))[0];
+  const score = (x, i) => (x.item_slot_type===i.cat?8:0) + (x.shopable?4:0) + (!x.disabled?4:0) + (x.item_tier===i.tier?2:0) + (x.shop_image_webp||x.shop_image?1:0);
   let hits = 0; const missing = [];
   for (const i of ITEMS) {
     const n = norm(i.name);
-    let m = byName.get(n);
-    if (!m) for (const a of (ALIAS[n] || [])) { m = byName.get(a); if (m) break; }
+    let c = byName.get(n);
+    if (!c) for (const a of (ALIAS[n] || [])) { c = byName.get(a); if (c) break; }
+    let m = c ? best(c, i) : null;
     if (!m) m = shop.find(x => { const k = norm(x.name);
       return (!x.item_slot_type || x.item_slot_type === i.cat) && k.length > 4 && (k.startsWith(n) || n.startsWith(k)); });
-    if (m) { ICON[i.slug] = pick(m); hits++; } else missing.push(i.name);
+    if (m) { ICON[i.slug] = urls(m); hits++; } else missing.push(i.name);
   }
   document.documentElement.dataset.icons = hits;
   if (missing.length) console.info('[Item Codex] no icon for', missing.length, 'items:', missing.join(', '));
   return hits;
 }
 async function loadIcons(){
-  const KEY = 'icodex-icons-v1', DAY = 864e5;
+  const KEY = 'icodex-icons-v2', DAY = 864e5;
   try { const c = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (c && Date.now() - c.t < DAY && c.list) { applyIcons(c.list); return true; } } catch (e) {}
   try {
     const r = await fetch(ICON_API, {mode: 'cors'});
     if (!r.ok) throw new Error(r.status);
     const raw = await r.json();
-    const list = raw.map(x => ({name: x.name, type: x.type, item_slot_type: x.item_slot_type,
+    const list = raw.map(x => ({name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
       shop_image_webp: x.shop_image_webp, shop_image: x.shop_image, image_webp: x.image_webp, image: x.image}))
       .filter(x => x.shop_image_webp || x.shop_image || x.image_webp || x.image);
     applyIcons(list);

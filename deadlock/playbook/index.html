@@ -120,11 +120,11 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .innate.none{border-left-color:var(--line);color:var(--muted)}
 .innate.none p{color:var(--muted)}
 .innates{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
-.weapon{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--weapon);border-radius:8px;padding:14px 16px}
-.weapon h3{margin:0 0 8px;font:600 16px var(--body)}
-.weapon ul{margin:0;padding-left:18px;display:grid;gap:4px}
-.weapon li{font-size:14px}
-.weapon li::marker{color:var(--weapon)}
+.wpn{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--weapon);border-radius:8px;padding:14px 16px}
+.wpn h3{margin:0 0 8px;font:600 16px var(--body)}
+.wpn ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.wpn li{font-size:14px}
+.wpn li::marker{color:var(--weapon)}
 
 .abil{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 @media (max-width:1000px){.abil{grid-template-columns:minmax(0,1fr)}}
@@ -349,7 +349,7 @@ const HERO_API = 'https://api.deadlock-api.com/v1/assets/heroes?language=english
 const hnorm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');
 function glyph(h){
   const src = PIC[h.slug];
-  return src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.remove('pic');this.replaceWith(document.createTextNode('${initials(h.name)}'))">` : initials(h.name);
+  return src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.parentNode.classList.remove('pic');this.replaceWith(document.createTextNode('${initials(h.name)}'))">` : initials(h.name);
 }
 function applyPics(list){
   const pickImg = x => x.mm_webp || x.mm;
@@ -411,7 +411,7 @@ async function loadAbil(){
 }
 function abilIcon(heroSlug, name, fallback){
   const src = ABIL[heroSlug] && ABIL[heroSlug][name];
-  return src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode('${esc(fallback)}'))">` : esc(fallback);
+  return src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.replaceWith(document.createTextNode('${esc(fallback)}'))">` : esc(fallback);
 }
 
 function monoStyle(n){const h=hue(n);return `background:linear-gradient(145deg,hsl(${h} 42% 38%),hsl(${(h+40)%360} 48% 22%))`}
