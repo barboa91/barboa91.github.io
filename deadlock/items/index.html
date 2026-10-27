@@ -131,6 +131,14 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .card.ult{border-color:color-mix(in srgb,var(--brass) 55%,var(--line))}
 .c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-head{display:flex;gap:12px;align-items:center;min-width:0}
+.aico{flex:none;width:44px;height:44px;border-radius:8px;display:grid;place-items:center;font:600 16px var(--mono);color:#f3efe4;
+  background:color-mix(in srgb,var(--spirit) 34%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--spirit) 55%,transparent)}
+.aico.passive{background:color-mix(in srgb,var(--vital) 30%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--vital) 55%,transparent)}
+.aico.ultimate{background:color-mix(in srgb,var(--brass) 32%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brass) 60%,transparent)}
+.aico img{width:76%;height:76%;object-fit:contain;display:block}
+.aico.sm{width:20px;height:20px;border-radius:4px;font-size:10px}
+.aico.sm img{width:80%;height:80%}
 .slot{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
 .key{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--line);border-radius:3px;font:500 11px var(--mono);color:var(--fg)}
 .card h4{margin:4px 0 0;font:600 18px/1.2 var(--body)}

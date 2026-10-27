@@ -131,6 +131,14 @@ header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:spac
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .card.ult{border-color:color-mix(in srgb,var(--brass) 55%,var(--line))}
 .c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-head{display:flex;gap:12px;align-items:center;min-width:0}
+.aico{flex:none;width:44px;height:44px;border-radius:8px;display:grid;place-items:center;font:600 16px var(--mono);color:#f3efe4;
+  background:color-mix(in srgb,var(--spirit) 34%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--spirit) 55%,transparent)}
+.aico.passive{background:color-mix(in srgb,var(--vital) 30%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--vital) 55%,transparent)}
+.aico.ultimate{background:color-mix(in srgb,var(--brass) 32%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brass) 60%,transparent)}
+.aico img{width:76%;height:76%;object-fit:contain;display:block}
+.aico.sm{width:20px;height:20px;border-radius:4px;font-size:10px}
+.aico.sm img{width:80%;height:80%}
 .slot{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
 .key{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--line);border-radius:3px;font:500 11px var(--mono);color:var(--fg)}
 .card h4{margin:4px 0 0;font:600 18px/1.2 var(--body)}
@@ -336,6 +344,7 @@ function initials(n){const w=n.replace(/^The /,'').replace('&','').split(/\s+/).
 /* In-game minimap icons, loaded at runtime from the deadlock-api.com assets API.
    Any hero that doesn't resolve keeps its monogram tile. */
 const PIC = {};
+const HEROID = {};
 const HERO_API = 'https://api.deadlock-api.com/v1/assets/heroes?language=english';
 const hnorm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');
 function glyph(h){
@@ -351,21 +360,58 @@ function applyPics(list){
   for (const h of HEROES) {
     const n = hnorm(h.name);
     let m = byName.get(n) || ok.find(x => { const k=hnorm(x.name); return k.length>3 && (k.includes(n)||n.includes(k)); });
-    if (m) PIC[h.slug] = pickImg(m); else missing.push(h.name);
+    if (m) { PIC[h.slug] = pickImg(m); if (m.id!=null) HEROID[h.slug] = m.id; } else missing.push(h.name);
   }
   if (missing.length) console.info('[Hero Codex] no minimap icon for:', missing.join(', '));
 }
 async function loadPics(){
-  const KEY='codex-pics-v1', DAY=864e5;
+  const KEY='codex-pics-v2', DAY=864e5;
   try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<DAY && c.list) { applyPics(c.list); return true; } } catch(e){}
   try {
     const r = await fetch(HERO_API, {mode:'cors'}); if (!r.ok) throw new Error(r.status);
-    const list = (await r.json()).map(x => ({name:x.name, sel:!!x.player_selectable && !x.disabled,
+    const list = (await r.json()).map(x => ({id:x.id, name:x.name, sel:!!x.player_selectable && !x.disabled,
       mm_webp:x.images&&x.images.minimap_image_webp, mm:x.images&&x.images.minimap_image}));
     applyPics(list);
     try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch(e){}
     return true;
   } catch(e) { console.info('[Hero Codex] icons unavailable, using monograms:', e.message||e); return false; }
+}
+
+/* In-game ability icons from the same assets API (abilities are listed with the items).
+   Matched by ability name, using the hero id to break ties; anything unmatched keeps its slot number. */
+const ABIL = {};
+const ABIL_API = 'https://api.deadlock-api.com/v1/assets/items?language=english';
+const kitOf = h => h.abilities ? h.abilities.map(a=>a.name) : ((typeof KIT!=='undefined' && KIT[h.name]) ? KIT[h.name].map(a=>a[0]) : []);
+function applyAbil(list){
+  const missing=[];
+  for (const h of HEROES){
+    const id=HEROID[h.slug], mine=list.filter(x=>id!=null && x.hero===id), out={};
+    for (const name of kitOf(h)){
+      const n=hnorm(name);
+      const same=list.filter(x=>hnorm(x.name)===n);
+      let m = same.find(x=>id!=null && x.hero===id) || (same.length===1?same[0]:null)
+           || mine.find(x=>{const k=hnorm(x.name); return k.length>3 && (k.includes(n)||n.includes(k));});
+      if (m) out[name]=m.img; else missing.push(h.name+': '+name);
+    }
+    ABIL[h.slug]=out;
+  }
+  if (missing.length) console.info('[Hero Codex] no ability icon for', missing.length, 'abilities:', missing.join(', '));
+}
+async function loadAbil(){
+  const KEY='codex-abil-v1', DAY=864e5;
+  try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<DAY && c.list) { applyAbil(c.list); return true; } } catch(e){}
+  try {
+    const r = await fetch(ABIL_API, {mode:'cors'}); if (!r.ok) throw new Error(r.status);
+    const list = (await r.json()).filter(x => x && x.type==='ability' && x.name && (x.image_webp||x.image))
+      .map(x => ({name:x.name, hero: x.hero!=null ? x.hero : (Array.isArray(x.heroes)?x.heroes[0]:null), img:x.image_webp||x.image}));
+    applyAbil(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch(e){}
+    return true;
+  } catch(e) { console.info('[Hero Codex] ability icons unavailable, using slot numbers:', e.message||e); return false; }
+}
+function abilIcon(heroSlug, name, fallback){
+  const src = ABIL[heroSlug] && ABIL[heroSlug][name];
+  return src ? `<img src="${esc(src)}" alt="" loading="lazy" decoding="async" onerror="this.replaceWith(document.createTextNode('${esc(fallback)}'))">` : esc(fallback);
 }
 
 function monoStyle(n){const h=hue(n);return `background:linear-gradient(145deg,hsl(${h} 42% 38%),hsl(${(h+40)%360} 48% 22%))`}
@@ -407,7 +453,7 @@ function renderList(){
 }
 
 function abType(hero,name){const k=(KIT[hero]||[]).find(a=>a[0]===name);return k?k[1]:'ability'}
-function abChip(hero,name,extra=''){const t=abType(hero,name);return `<span class="ab ${t}">${esc(name)}${extra}</span>`}
+function abChip(hero,name,extra=''){const t=abType(hero,name);const s=slug(hero);const ic=(ABIL[s]&&ABIL[s][name])?`<span class="aico sm ${t}" aria-hidden="true">${abilIcon(s,name,'')}</span>`:'';return `<span class="ab ${t}">${ic}${esc(name)}${extra}</span>`}
 function step(hero,s){return /^[A-Z]/.test(s)&&(KIT[hero]||[]).some(a=>a[0]===s)?abChip(hero,s):`<span class="act">${esc(s)}</span>`}
 const arrow='<span class="arr" aria-hidden="true">→</span>';
 function heroChip(n){const h=BY[n]; if(!h) return '';
@@ -454,7 +500,7 @@ function renderHero(s){
       <div><div class="pl-h">Strengths</div><ul class="pl good">${p.strong.map(x=>`<li><span class="mk" aria-hidden="true">+</span><span>${esc(x)}</span></li>`).join('')}</ul></div>
       <div><div class="pl-h">Weaknesses</div><ul class="pl bad">${p.weak.map(x=>`<li><span class="mk" aria-hidden="true">−</span><span>${esc(x)}</span></li>`).join('')}</ul></div>
     </article>`).join('');
-  const prio=h.maxo.map((a,i)=>`<li><span class="n">${['Max first','Then','Then','Last'][i]}</span><b>${esc(a)}</b><small>${TYPE[abType(h.name,a)]}</small></li>`).join('');
+  const prio=h.maxo.map((a,i)=>{const t=abType(h.name,a);const ic=(ABIL[h.slug]&&ABIL[h.slug][a])?`<span class="aico sm ${t}" aria-hidden="true">${abilIcon(h.slug,a,'')}</span>`:'';return `<li><span class="n">${['Max first','Then','Then','Last'][i]}</span><b style="display:flex;gap:6px;align-items:center">${ic}${esc(a)}</b><small>${TYPE[t]}</small></li>`}).join('');
   const items=['early','mid','late'].map((k,i)=>{const xs=(h.items&&h.items[k])||[];
     return `<div class="ig"><h5>${PHASE[['lane','mid','late'][i]][0]}<span>${PHASE[['lane','mid','late'][i]][1]}</span></h5>
       ${xs.length?`<div class="ichips">${xs.map(x=>`<a class="ichip" href="https://alex-barbosa.com/deadlock/items/#${itemSlug(x)}">${esc(x)}</a>`).join('')}</div>`:'<p class="muted-note">No data</p>'}</div>`}).join('');
@@ -512,7 +558,7 @@ document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.i
 const initial=(location.hash||'').slice(1);
 const first=filtered()[0]||HEROES[0];
 renderHero(HEROES.some(h=>h.slug===initial)?initial:first.slug);
-loadPics().then(ok=>{ if(ok && Object.keys(PIC).length) renderHero(state.cur); });
+loadPics().then(()=>loadAbil()).then(()=>renderHero(state.cur));
 </script>
 <script>
 /* Phone layout: sticky search bar + Browse button; the list opens as a sheet under the bar. */
