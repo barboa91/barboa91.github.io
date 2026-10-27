@@ -155,6 +155,10 @@ details.sharedwrap[open] summary .sec-h::before{transform:rotate(90deg)}
 .sitenav a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .mono.pic,.big-mono.pic{background:var(--raise)!important;box-shadow:inset 0 0 0 1px var(--line)}
 .mono img,.big-mono img{width:100%;height:100%;object-fit:contain;display:block}
+.headlinks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.headlinks a{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--brass);border:1px solid var(--line);border-radius:4px;padding:6px 10px}
+.headlinks a:hover{border-color:var(--brass)}
+.headlinks a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 footer{margin-top:32px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
 footer a{color:var(--brass)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -170,6 +174,7 @@ footer a{color:var(--brass)}
       <nav class="sitenav" aria-label="Codex pages">
         <a href="https://alex-barbosa.com/deadlock/" aria-current="page">Heroes</a>
         <a href="https://alex-barbosa.com/deadlock/items/">Items</a>
+        <a href="https://alex-barbosa.com/deadlock/playbook/">Playbook</a>
       </nav>
     </div>
     <div class="legend" aria-label="Ability type legend">
@@ -318,7 +323,8 @@ function renderHero(s){
       <div class="big-mono${PIC[h.slug]?' pic':''}" style="${monoStyle(h.name)}" aria-hidden="true">${glyph(h)}</div>
       <div style="min-width:0"><h2>${esc(h.name)}</h2>
         <div class="tags">${h.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
-        <p class="summary">${esc(h.summary)}</p></div>
+        <p class="summary">${esc(h.summary)}</p>
+        <div class="headlinks"><a href="https://alex-barbosa.com/deadlock/playbook/#${h.slug}">Match playbook</a></div></div>
     </section>
     <section class="stats" aria-label="Base stats">
       <div class="stat"><b>${esc(st.health)}</b><small>Health</small></div>
