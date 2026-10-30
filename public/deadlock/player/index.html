@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deadlock Player Lookup</title>
+<meta name="robots" content="noindex">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Limelight&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: two-pane codex — roster rail on the left, a dossier for the chosen hero on the right; stacks on phones. */
+:root{
+  --bg:#0f1214; --panel:#161b1e; --raise:#1d2428; --line:#2a3337;
+  --fg:#e6e2d6; --muted:#97a09f; --brass:#d2a64a; --brass-ink:#1a1408;
+  --weapon:#e58a3a; --vital:#7cc46a; --spirit:#b48cf0;
+  --display:"Limelight","Didot","Bodoni 72",Georgia,serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;
+  border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+.mast h1{font:400 clamp(34px,6vw,54px)/1 var(--display);margin:0;letter-spacing:.02em;color:var(--brass);text-wrap:balance}
+.mast p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 12px/1 var(--mono);color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Rail */
+.rail{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 24px)}
+.bar{display:flex;gap:8px}
+.bar .search{flex:1;min-width:0}
+.browse{display:none;align-items:center;gap:6px;flex:none;background:var(--brass);color:var(--brass-ink);border:0;border-radius:6px;padding:0 14px;font:600 14px var(--body);cursor:pointer}
+.browse span{font:500 12px var(--mono);background:color-mix(in srgb,var(--brass-ink) 16%,transparent);padding:2px 6px;border-radius:999px}
+.browse[aria-expanded="true"]{background:var(--raise);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.browse:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.sheet{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1}
+.lbl{display:block}
+[hidden]{display:none!important}
+.search{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--fg);
+  font:15px var(--body);padding:10px 12px;border-radius:6px}
+.search:focus{outline:2px solid var(--brass);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:transparent;border:1px solid var(--line);color:var(--muted);font:500 12px var(--body);
+  padding:5px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brass);color:var(--brass-ink);border-color:var(--brass)}
+.chip:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.count{font:12px var(--mono);color:var(--muted)}
+.list{list-style:none;margin:0;padding:0;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+@media (max-width:820px){
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;max-height:none;background:var(--bg);padding-block:10px;
+    box-shadow:-16px 0 0 var(--bg),16px 0 0 var(--bg),0 1px 0 var(--line)}
+  .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .browse{display:inline-flex}
+  .search{font-size:16px}
+  .sheet{display:none}
+  body.sheet-open{overflow:hidden}
+  body.sheet-open .sheet{display:flex;position:fixed;left:0;right:0;bottom:0;top:var(--sheet-top,120px);z-index:19;overflow:auto;overscroll-behavior:contain;
+    background:var(--bg);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .list{overflow:visible;flex:none}
+  .li-sub{max-width:none;white-space:normal}
+  .list button{padding:10px 12px}
+  .wrap{padding-block:16px 40px}
+  header.top{margin-bottom:6px;padding-bottom:14px}
+  .grid{gap:14px}
+}
+.list button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;cursor:pointer;
+  border-bottom:1px solid var(--line)}
+.list button:hover{background:var(--raise)}
+.list button:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+.list button[aria-current="true"]{background:var(--raise);box-shadow:inset 3px 0 0 var(--brass)}
+.mono{width:32px;height:32px;flex:none;border-radius:4px;display:grid;place-items:center;
+  font:400 15px/1 var(--display);color:#fff;letter-spacing:.02em}
+.li-name{font-weight:600;font-size:14px;line-height:1.2}
+.li-sub{font-size:12px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.li-txt{min-width:0}
+
+/* Dossier */
+.dossier{min-width:0;display:flex;flex-direction:column;gap:18px}
+.hero-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px}
+.big-mono{width:84px;height:84px;border-radius:8px;display:grid;place-items:center;font:400 34px/1 var(--display);color:#fff;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.hero-head h2{font:400 clamp(30px,5vw,46px)/1.02 var(--display);margin:0;letter-spacing:.015em;text-wrap:balance}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tag{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:5px 8px;border-radius:3px;color:var(--brass)}
+.summary{margin:0;color:var(--fg);max-width:68ch}
+@media (max-width:520px){.hero-head{gap:14px;padding:16px;align-items:start}.big-mono{width:60px;height:60px;font-size:24px}.hero-head h2{font-size:30px}.card{padding:14px}.mast p{font-size:14px}}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--panel);padding:10px 14px}
+.stat b{display:block;font:500 18px var(--mono);font-variant-numeric:tabular-nums}
+.stat small{font:500 11px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+.sec-h{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:6px 0 -6px;display:flex;align-items:center;gap:10px}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.innate{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vital);border-radius:8px;padding:14px 16px}
+.innate h3{margin:0 0 4px;font:600 16px var(--body)}
+.innate p{margin:0;color:var(--fg)}
+.innate.none{border-left-color:var(--line);color:var(--muted)}
+.innate.none p{color:var(--muted)}
+.innates{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.wpn{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--weapon);border-radius:8px;padding:14px 16px}
+.wpn h3{margin:0 0 8px;font:600 16px var(--body)}
+.wpn ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.wpn li{font-size:14px}
+.wpn li::marker{color:var(--weapon)}
+
+.abil{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){.abil{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.ult{border-color:color-mix(in srgb,var(--brass) 55%,var(--line))}
+.c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-head{display:flex;gap:12px;align-items:center;min-width:0}
+.aico{flex:none;width:44px;height:44px;border-radius:8px;display:grid;place-items:center;font:600 16px var(--mono);color:#f3efe4;
+  background:color-mix(in srgb,var(--spirit) 34%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--spirit) 55%,transparent)}
+.aico.passive{background:color-mix(in srgb,var(--vital) 30%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--vital) 55%,transparent)}
+.aico.ultimate{background:color-mix(in srgb,var(--brass) 32%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brass) 60%,transparent)}
+.aico img{width:76%;height:76%;object-fit:contain;display:block}
+.aico.sm{width:20px;height:20px;border-radius:4px;font-size:10px}
+.aico.sm img{width:80%;height:80%}
+.slot{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+.key{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--line);border-radius:3px;font:500 11px var(--mono);color:var(--fg)}
+.card h4{margin:4px 0 0;font:600 18px/1.2 var(--body)}
+.kind{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:3px;white-space:nowrap}
+.kind.ability{color:var(--spirit);border:1px solid color-mix(in srgb,var(--spirit) 50%,transparent)}
+.kind.passive{color:var(--vital);border:1px solid color-mix(in srgb,var(--vital) 50%,transparent)}
+.kind.ultimate{color:var(--brass-ink);background:var(--brass)}
+.card p{margin:0}
+.cd{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.ups{list-style:none;margin:0;padding:0;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.ups li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:13.5px;color:var(--fg)}
+.pip{font:500 11px/1 var(--mono);color:var(--brass);padding-top:3px;white-space:nowrap}
+
+.shared{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.sk{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.sk h5{margin:0 0 3px;font:600 14px var(--body)}
+.sk p{margin:0;font-size:13.5px;color:var(--muted)}
+details.sharedwrap summary{cursor:pointer;list-style:none}
+details.sharedwrap summary::-webkit-details-marker{display:none}
+details.sharedwrap summary .sec-h::before{content:"▸";margin-right:2px;transition:transform .15s}
+details.sharedwrap[open] summary .sec-h::before{transform:rotate(90deg)}
+.hit{background:color-mix(in srgb,var(--brass) 30%,transparent);color:inherit;border-radius:2px}
+.sitenav{display:flex;gap:4px;margin-top:12px}
+.sitenav a{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:4px}
+.sitenav a[aria-current="page"]{color:var(--brass-ink);background:var(--brass);border-color:var(--brass)}
+.sitenav a:hover{color:var(--fg)}
+.sitenav a[aria-current="page"]:hover{color:var(--brass-ink)}
+.sitenav a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.mono.pic,.big-mono.pic{background:var(--raise)!important;box-shadow:inset 0 0 0 1px var(--line)}
+.mono img,.big-mono img{width:100%;height:100%;object-fit:contain;display:block}
+.headlinks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.headlinks a{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--brass);border:1px solid var(--line);border-radius:4px;padding:6px 10px}
+.headlinks a:hover{border-color:var(--brass)}
+.headlinks a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+footer{margin-top:32px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+footer a{color:var(--brass)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+/* Player page: single column. Lookup bar, then profile, summary, top heroes, recent matches. */
+.lookup{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.lookup form{display:flex;gap:8px;flex-wrap:wrap}
+.lookup .search{flex:1;min-width:0}
+.btn{background:var(--brass);color:var(--brass-ink);border:0;border-radius:6px;padding:0 18px;min-height:42px;font:600 14px var(--body);cursor:pointer}
+.btn:disabled{opacity:.6;cursor:progress}
+.btn.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.hint{margin:0;font-size:13px;color:var(--muted)}
+.hint code{font:500 12px var(--mono);background:var(--raise);padding:1px 5px;border-radius:3px;color:var(--fg)}
+.testtag{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--weapon);border:1px solid color-mix(in srgb,var(--weapon) 50%,transparent);border-radius:3px;padding:3px 6px}
+.status{font-size:14px;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel)}
+.status.err{border-left:3px solid var(--weapon)}
+.status.info{border-left:3px solid var(--brass)}
+.out{display:flex;flex-direction:column;gap:18px}
+
+.prof{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+@media (max-width:640px){.prof{grid-template-columns:auto minmax(0,1fr)}.prof .rank{grid-column:1/-1}}
+.avatar{width:84px;height:84px;border-radius:8px;object-fit:cover;background:var(--raise);display:block}
+.prof h2{font:400 clamp(26px,4.5vw,40px)/1.05 var(--display);margin:0;overflow-wrap:anywhere}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font:500 12px var(--mono);color:var(--muted)}
+.meta a{color:var(--brass)}
+.rank{display:flex;gap:10px;align-items:center;background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:10px 14px}
+.rank img{width:44px;height:44px;object-fit:contain}
+.rank b{display:block;font:600 15px var(--body)}
+.rank small{font:500 11px var(--mono);color:var(--muted)}
+
+.sum{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media (max-width:760px){.sum{grid-template-columns:repeat(2,minmax(0,1fr))}.sum div:last-child{grid-column:1/-1}}
+.sum div{background:var(--panel);padding:12px 14px}
+.sum b{display:block;font:500 20px var(--mono);font-variant-numeric:tabular-nums}
+.sum small{font:500 11px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.good{color:var(--vital)} .bad{color:var(--weapon)}
+
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th{font:600 11px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-top:1px solid var(--line);white-space:nowrap}
+tr:first-child td{border-top:0}
+td.num,th.num{text-align:right}
+.hcell{display:flex;align-items:center;gap:10px}
+.hcell .mono{width:30px;height:30px;font-size:12px}
+.hcell a{color:var(--fg);text-decoration:none;font-weight:600}
+.hcell a:hover{color:var(--brass)}
+.wl{display:inline-block;min-width:22px;text-align:center;font:600 11px var(--mono);border-radius:3px;padding:3px 5px}
+.wl.w{color:var(--vital);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--vital) 55%,transparent)}
+.wl.l{color:var(--weapon);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--weapon) 55%,transparent)}
+.bar{height:6px;border-radius:3px;background:var(--line);min-width:70px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--brass)}
+.more{align-self:flex-start}
+
+.cands{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.cand{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.cand:hover{border-color:var(--brass)}
+.cand:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.cand img{width:40px;height:40px;border-radius:6px;object-fit:cover;flex:none;background:var(--raise)}
+.cand b{display:block;font:600 14px var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cand small{display:block;font:500 11px var(--mono);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.single{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="mast">
+      <h1>Player Lookup</h1>
+      <p>Look up any Deadlock player by Steam ID or profile link to see their rank, hero pool and recent matches.</p>
+      <nav class="sitenav" aria-label="Codex pages">
+        <a href="https://alex-barbosa.com/deadlock/">Heroes</a>
+        <a href="https://alex-barbosa.com/deadlock/items/">Items</a>
+        <a href="https://alex-barbosa.com/deadlock/playbook/">Playbook</a>
+        <a href="https://alex-barbosa.com/deadlock/player/" aria-current="page">Player</a>
+      </nav>
+    </div>
+    <span class="testtag">Test page · unlisted</span>
+  </header>
+
+  <div class="single">
+    <section class="lookup">
+      <form id="f" autocomplete="off">
+        <label for="q" class="lbl">Steam ID or profile link</label>
+        <input id="q" class="search" type="search" placeholder="76561198…, steamcommunity.com/id/yourname, or [U:1:…]" spellcheck="false">
+        <button class="btn" id="go" type="submit">Look up</button>
+      </form>
+      <p class="hint">Accepts a SteamID64 <code>7656119…</code>, a profile link (<code>/profiles/…</code> or <code>/id/vanity</code>), a bare vanity name, SteamID3 <code>[U:1:…]</code>, <code>STEAM_1:…</code>, or a Deadlock account ID.</p>
+    </section>
+    <div id="status" aria-live="polite"></div>
+    <main class="out" id="out"></main>
+  </div>
+
+  <footer>
+    Player data from the public <a href="https://deadlock-api.com" target="_blank" rel="noopener">deadlock-api.com</a> API. Match history only covers matches the API has recorded; private or never-indexed profiles may show little or nothing. Vanity links are resolved by searching display names, so a SteamID64 or <code>/profiles/</code> link is the most reliable input.
+  </footer>
+</div>
+
+<script>
+const API = 'https://api.deadlock-api.com/v1';
+const STEAM64_BASE = 76561197960265728n;
+const TIERS = ['Obscurus','Initiate','Seeker','Acolyte','Sentinel','Mystic','Ritualist','Emissary','Oracle','Phantom','Ascendant','Eternus'];
+const ROMAN = ['','I','II','III','IV','V','VI'];
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const slug = s => s.toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const $ = id => document.getElementById(id);
+
+/* ---------- input parsing ---------- */
+function parseInput(raw){
+  let s = String(raw||'').trim();
+  if (!s) return null;
+  s = s.replace(/^https?:\/\//i,'').replace(/^(www\.)?/i,'');
+  let m;
+  if ((m = s.match(/steamcommunity\.com\/profiles\/(\d{17})/i))) return fromId64(m[1]);
+  if ((m = s.match(/steamcommunity\.com\/id\/([^/?#\s]+)/i))) return {vanity: decodeURIComponent(m[1])};
+  if ((m = s.match(/^\[?U:1:(\d+)\]?$/i))) return {account: Number(m[1])};
+  if ((m = s.match(/^STEAM_[0-5]:([01]):(\d+)$/i))) return {account: Number(m[2])*2 + Number(m[1])};
+  if (/^7656119\d{10}$/.test(s)) return fromId64(s);
+  if (/^\d{1,10}$/.test(s) && Number(s) < 2**32) return {account: Number(s)};
+  if (/^[A-Za-z0-9_-]{2,32}$/.test(s)) return {vanity: s};
+  return {name: s};
+}
+function fromId64(id){ const a = BigInt(id) - STEAM64_BASE; return a > 0n && a < 2n**32n ? {account: Number(a)} : null; }
+const toId64 = acc => (BigInt(acc) + STEAM64_BASE).toString();
+
+/* ---------- fetch helpers (short per-browser cache so testing doesn't burn rate limits) ---------- */
+async function getJSON(url, {cacheMin=0, allow429=false}={}){
+  const key = 'pl:'+url;
+  if (cacheMin){ try{ const c=JSON.parse(localStorage.getItem(key)||'null'); if(c && Date.now()-c.t < cacheMin*6e4) return c.v; }catch(e){} }
+  const r = await fetch(url, {mode:'cors'});
+  let body = null; try { body = await r.json(); } catch(e) {}
+  if (!r.ok && !(allow429 && r.status===429 && Array.isArray(body))) {
+    const err = new Error((body && (body.message||body.error)) || ('HTTP '+r.status)); err.status = r.status; throw err;
+  }
+  const v = r.status===429 ? {data: body, limited: true} : body;
+  if (cacheMin){ try{ localStorage.setItem(key, JSON.stringify({t:Date.now(), v})); }catch(e){} }
+  return v;
+}
+
+/* ---------- assets: heroes + ranks ---------- */
+let HEROES = null, RANKS = null;
+async function loadAssets(){
+  if (HEROES) return;
+  HEROES = {};
+  try {
+    const list = await getJSON(API+'/assets/heroes?language=english', {cacheMin: 1440});
+    for (const h of list) HEROES[h.id] = {name: h.name, img: h.images && (h.images.minimap_image_webp || h.images.minimap_image || h.images.icon_image_small_webp || h.images.icon_image_small)};
+  } catch(e) { console.info('[Player] hero assets unavailable', e.message); }
+  try { RANKS = await getJSON(API+'/assets/ranks?language=english', {cacheMin: 1440}); } catch(e) { RANKS = null; }
+}
+function heroCell(id){
+  const h = HEROES[id] || {name: 'Hero #'+id};
+  const init = h.name.replace(/^The /,'').split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  const icon = h.img ? `<span class="mono pic"><img src="${esc(h.img)}" alt="" onerror="this.replaceWith(document.createTextNode('${esc(init)}'))"></span>` : `<span class="mono">${esc(init)}</span>`;
+  const link = HEROES[id] ? `<a href="https://alex-barbosa.com/deadlock/playbook/#${slug(h.name)}">${esc(h.name)}</a>` : esc(h.name);
+  return `<span class="hcell">${icon}${link}</span>`;
+}
+function rankInfo(rank){
+  if (rank == null) return null;
+  const tier = Math.floor(rank/10), sub = rank % 10;
+  const name = TIERS[tier] ? TIERS[tier] + (sub ? ' ' + (ROMAN[sub]||sub) : '') : 'Rank ' + rank;
+  let img = null;
+  try {
+    const t = Array.isArray(RANKS) && RANKS.find(x => x.tier === tier);
+    if (t && t.images) {
+      const keys = Object.keys(t.images);
+      const k = keys.find(k => new RegExp('small.*subrank'+sub+'(_webp)?$').test(k) && /webp/.test(k))
+             || keys.find(k => new RegExp('small.*subrank'+sub+'$').test(k))
+             || keys.find(k => /^small(_webp)?$/.test(k)) || keys.find(k => /small/.test(k));
+      img = k ? t.images[k] : null;
+    }
+  } catch(e) {}
+  return {name, img, tier};
+}
+
+/* ---------- formatting ---------- */
+const pct = (a,b) => b ? Math.round(100*a/b) : 0;
+const kda = (k,d,a) => ((k + a) / Math.max(1, d)).toFixed(2);
+const dur = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+function ago(ts){ const s = Date.now()/1000 - ts; if (s < 3600) return Math.max(1,Math.round(s/60))+'m ago'; if (s < 86400) return Math.round(s/3600)+'h ago'; if (s < 86400*30) return Math.round(s/86400)+'d ago'; return new Date(ts*1000).toLocaleDateString(); }
+const teamNum = t => typeof t === 'number' ? t : (String(t).match(/\d+/)||[null])[0] != null ? Number(String(t).match(/\d+/)[0]) : null;
+const won = m => { const t = teamNum(m.player_team); return t != null && t === Number(m.match_result); };
+const modeName = m => { const v = m.match_mode; const map = {1:'Unranked',2:'Private',3:'Bots',4:'Ranked',7:'Hero Labs',8:'Placement'}; return typeof v === 'number' ? (map[v]||'Mode '+v) : String(v||'').replace('PrivateLobby','Private').replace('CoopBot','Bots').replace('NewPlayerPlacement','Placement'); };
+const isBrawl = m => m.game_mode === 4 || m.game_mode === 'StreetBrawl';
+
+/* ---------- UI ---------- */
+function setStatus(kind, html){ $('status').innerHTML = html ? `<div class="status ${kind}">${html}</div>` : ''; }
+function busy(on){ $('go').disabled = on; $('go').textContent = on ? 'Looking up…' : 'Look up'; }
+
+async function resolve(parsed){
+  if (parsed.account != null) return {account: parsed.account};
+  const term = parsed.vanity || parsed.name;
+  const list = await getJSON(`${API}/players/steam-search?search_query=${encodeURIComponent(term)}&limit=100&min_matches_played_last_30d=0&matches_played_weight=0`, {cacheMin: 30})
+    .catch(e => { if (e.status === 404) return []; throw e; });
+  if (parsed.vanity) {
+    const re = new RegExp('/id/' + parsed.vanity.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '/?$', 'i');
+    const exact = list.filter(p => re.test(p.profileurl || ''));
+    if (exact.length === 1) return {account: exact[0].account_id, profile: exact[0]};
+  }
+  return {candidates: list.slice(0, 12), term, wasVanity: !!parsed.vanity};
+}
+
+function renderCandidates(r){
+  const msg = r.wasVanity
+    ? `Couldn't match the vanity name <b>${esc(r.term)}</b> to a profile directly. Vanity links resolve by searching display names, so this works best when the two are similar.`
+    : `Showing players whose display name matches <b>${esc(r.term)}</b>.`;
+  if (!r.candidates.length) {
+    setStatus('err', `${msg} No matching players were found. Paste a SteamID64 or a <code>steamcommunity.com/profiles/…</code> link instead; you can find it on your Steam profile page (right-click, Copy Page URL).`);
+    $('out').innerHTML = ''; return;
+  }
+  CANDS = Object.fromEntries(r.candidates.map(p => [p.account_id, p]));
+  setStatus('info', msg + ' Pick the right one:');
+  $('out').innerHTML = `<section class="cands">${r.candidates.map(p => `<button class="cand" data-acc="${p.account_id}">
+      <img src="${esc(p.avatarmedium||p.avatar||'')}" alt="">
+      <span style="min-width:0"><b>${esc(p.personaname)}</b><small>${esc((p.profileurl||'').replace(/^https?:\/\/steamcommunity\.com/,''))}</small><small>${p.matches_played_last_30d ?? 0} matches in 30 days</small></span></button>`).join('')}</section>`;
+}
+
+async function lookup(raw){
+  const parsed = parseInput(raw);
+  if (!parsed) { setStatus('err', "That doesn't look like a Steam ID or profile link."); return; }
+  busy(true); setStatus('info', 'Looking up…'); $('out').innerHTML = '';
+  try {
+    await loadAssets();
+    const r = await resolve(parsed);
+    if (r.candidates) { renderCandidates(r); return; }
+    await showAccount(r.account, r.profile);
+  } catch (e) {
+    setStatus('err', `Lookup failed: ${esc(e.message)}. The API may be busy or rate limiting; wait a minute and try again.`);
+  } finally { busy(false); }
+}
+
+let MATCHES = [], SHOWN = 0, CANDS = {};
+async function showAccount(acc, knownProfile){
+  try { history.replaceState(null, '', '#' + acc); } catch(e) {}
+  const [profR, histR, heroR, mmrR] = await Promise.allSettled([
+    knownProfile ? Promise.resolve([knownProfile]) : getJSON(`${API}/players/steam?account_ids=${acc}`, {cacheMin: 60}),
+    getJSON(`${API}/players/${acc}/match-history`, {cacheMin: 10, allow429: true}),
+    getJSON(`${API}/players/hero-stats?account_ids=${acc}`, {cacheMin: 10}),
+    getJSON(`${API}/players/${acc}/mmr-history`, {cacheMin: 10}),
+  ]);
+  const prof = profR.status === 'fulfilled' && Array.isArray(profR.value) ? profR.value[0] : null;
+  let hist = histR.status === 'fulfilled' ? histR.value : null;
+  const limited = !!(hist && hist.limited); if (hist && hist.limited) hist = hist.data;
+  MATCHES = Array.isArray(hist) ? hist.slice().sort((a,b) => b.start_time - a.start_time) : [];
+  const heroes = heroR.status === 'fulfilled' && Array.isArray(heroR.value) ? heroR.value : [];
+  const mmr = mmrR.status === 'fulfilled' && Array.isArray(mmrR.value) ? mmrR.value : [];
+  const latest = mmr.slice().sort((a,b) => b.start_time - a.start_time)[0];
+  const rk = latest ? rankInfo(latest.rank) : null;
+
+  if (!prof && !MATCHES.length && !heroes.length) {
+    setStatus('err', `No Deadlock data found for account <b>${acc}</b> (SteamID64 ${toId64(acc)}). The profile may be private, or the API hasn't recorded any of its matches yet.`);
+    $('out').innerHTML = ''; return;
+  }
+  setStatus(limited ? 'info' : '', limited ? 'The API is rate limiting fresh match fetches right now, so this shows its stored history. Try again in a while for the newest games.' : '');
+
+  // Summary from hero stats when available (full history), else from the match list.
+  const totals = heroes.length
+    ? heroes.reduce((t,h) => ({m:t.m+h.matches_played, w:t.w+h.wins, k:t.k+h.kills, d:t.d+h.deaths, a:t.a+h.assists}), {m:0,w:0,k:0,d:0,a:0})
+    : MATCHES.reduce((t,m) => ({m:t.m+1, w:t.w+(won(m)?1:0), k:t.k+m.player_kills, d:t.d+m.player_deaths, a:t.a+m.player_assists}), {m:0,w:0,k:0,d:0,a:0});
+  const recent = MATCHES.slice(0, 20), rw = recent.filter(won).length;
+
+  const name = prof ? prof.personaname : 'Account ' + acc;
+  $('out').innerHTML = `
+    <section class="prof">
+      ${prof && prof.avatarfull ? `<img class="avatar" src="${esc(prof.avatarfull)}" alt="">` : `<div class="avatar"></div>`}
+      <div style="min-width:0"><h2>${esc(name)}</h2>
+        <div class="meta"><span>Account ${acc}</span><span>SteamID64 ${toId64(acc)}</span>
+          ${prof && prof.countrycode ? `<span>${esc(prof.countrycode)}</span>` : ''}
+          <a href="${esc(prof && prof.profileurl || 'https://steamcommunity.com/profiles/' + toId64(acc))}" target="_blank" rel="noopener">Steam profile</a></div></div>
+      <div class="rank">${rk && rk.img ? `<img src="${esc(rk.img)}" alt="">` : ''}<div><b>${rk ? esc(rk.name) : 'Unranked'}</b><small>${latest ? 'as of ' + ago(latest.start_time) : 'no ranked data'}</small></div></div>
+    </section>
+    <section class="sum" aria-label="Summary">
+      <div><b>${totals.m}</b><small>Matches recorded</small></div>
+      <div><b class="${pct(totals.w,totals.m)>=50?'good':'bad'}">${pct(totals.w,totals.m)}%</b><small>Win rate</small></div>
+      <div><b>${kda(totals.k,totals.d,totals.a)}</b><small>KDA</small></div>
+      <div><b>${recent.length ? rw + '–' + (recent.length - rw) : '—'}</b><small>Last ${recent.length || 20} games</small></div>
+      <div><b>${heroes.length}</b><small>Heroes played</small></div>
+    </section>
+    ${heroes.length ? `<div class="sec-h">Hero pool</div>
+    <div class="tbl-wrap"><table><thead><tr><th>Hero</th><th class="num">Matches</th><th>Win rate</th><th class="num">KDA</th><th class="num">Souls/min</th><th class="num">Last played</th></tr></thead><tbody>
+      ${heroes.slice().sort((a,b) => b.matches_played - a.matches_played).slice(0, 15).map(h => `<tr>
+        <td>${heroCell(h.hero_id)}</td><td class="num">${h.matches_played}</td>
+        <td><span style="display:flex;gap:8px;align-items:center"><span class="bar"><i style="width:${pct(h.wins,h.matches_played)}%"></i></span>${pct(h.wins,h.matches_played)}%</span></td>
+        <td class="num">${kda(h.kills,h.deaths,h.assists)}</td><td class="num">${Math.round(h.networth_per_min||0)}</td><td class="num">${h.last_played ? ago(h.last_played) : '—'}</td></tr>`).join('')}
+    </tbody></table></div>` : ''}
+    <div class="sec-h">Recent matches</div>
+    ${MATCHES.length ? `<div class="tbl-wrap"><table><thead><tr><th></th><th>Hero</th><th class="num">K / D / A</th><th class="num">Souls</th><th class="num">Last hits</th><th class="num">Length</th><th>Mode</th><th class="num">When</th></tr></thead><tbody id="mrows"></tbody></table></div>
+      <button class="btn ghost more" id="more" type="button">Show more</button>` : `<p class="note">No matches recorded yet.</p>`}
+    <p class="note">Win rate and KDA cover every match the API has recorded for this account${heroes.length ? '' : ' in the match list'}.</p>`;
+  SHOWN = 0; showMore();
+}
+function showMore(){
+  const rows = MATCHES.slice(SHOWN, SHOWN + 20); SHOWN += rows.length;
+  const tb = $('mrows'); if (!tb) return;
+  tb.insertAdjacentHTML('beforeend', rows.map(m => `<tr>
+    <td><span class="wl ${won(m)?'w':'l'}">${won(m)?'W':'L'}</span></td><td>${heroCell(m.hero_id)}</td>
+    <td class="num">${m.player_kills} / ${m.player_deaths} / ${m.player_assists}</td><td class="num">${(m.net_worth||0).toLocaleString()}</td>
+    <td class="num">${m.last_hits ?? '—'}</td><td class="num">${dur(m.match_duration_s||0)}</td><td>${isBrawl(m)?'Street Brawl':esc(modeName(m))}</td><td class="num">${ago(m.start_time)}</td></tr>`).join(''));
+  const b = $('more'); if (b) b.hidden = SHOWN >= MATCHES.length;
+}
+
+$('f').addEventListener('submit', e => { e.preventDefault(); lookup($('q').value); });
+document.addEventListener('click', e => {
+  const c = e.target.closest('.cand');
+  if (c) { const acc = Number(c.dataset.acc); $('q').value = acc; busy(true); setStatus('info','Looking up…');
+    showAccount(acc, CANDS[acc]).catch(err => setStatus('err', 'Lookup failed: ' + esc(err.message))).finally(() => busy(false)); return; }
+  if (e.target.id === 'more') showMore();
+});
+const h0 = (location.hash||'').slice(1);
+if (/^\d{1,10}$/.test(h0)) { $('q').value = h0; lookup(h0); }
+</script>
+
+</body>
+</html>
