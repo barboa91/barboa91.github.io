@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deadlock Patch Archive</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Limelight&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: two-pane codex — roster rail on the left, a dossier for the chosen hero on the right; stacks on phones. */
+:root{
+  --bg:#0f1214; --panel:#161b1e; --raise:#1d2428; --line:#2a3337;
+  --fg:#e6e2d6; --muted:#97a09f; --brass:#d2a64a; --brass-ink:#1a1408;
+  --weapon:#e58a3a; --vital:#7cc46a; --spirit:#b48cf0;
+  --display:"Limelight","Didot","Bodoni 72",Georgia,serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;
+  border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+.mast h1{font:400 clamp(34px,6vw,54px)/1 var(--display);margin:0;letter-spacing:.02em;color:var(--brass);text-wrap:balance}
+.mast p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 12px/1 var(--mono);color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Rail */
+.rail{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 24px)}
+.bar{display:flex;gap:8px}
+.bar .search{flex:1;min-width:0}
+.browse{display:none;align-items:center;gap:6px;flex:none;background:var(--brass);color:var(--brass-ink);border:0;border-radius:6px;padding:0 14px;font:600 14px var(--body);cursor:pointer}
+.browse span{font:500 12px var(--mono);background:color-mix(in srgb,var(--brass-ink) 16%,transparent);padding:2px 6px;border-radius:999px}
+.browse[aria-expanded="true"]{background:var(--raise);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.browse:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.sheet{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1}
+.lbl{display:block}
+[hidden]{display:none!important}
+.search{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--fg);
+  font:15px var(--body);padding:10px 12px;border-radius:6px}
+.search:focus{outline:2px solid var(--brass);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:transparent;border:1px solid var(--line);color:var(--muted);font:500 12px var(--body);
+  padding:5px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brass);color:var(--brass-ink);border-color:var(--brass)}
+.chip:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.count{font:12px var(--mono);color:var(--muted)}
+.list{list-style:none;margin:0;padding:0;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+@media (max-width:820px){
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;max-height:none;background:var(--bg);padding-block:10px;
+    box-shadow:-16px 0 0 var(--bg),16px 0 0 var(--bg),0 1px 0 var(--line)}
+  .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .browse{display:inline-flex}
+  .search{font-size:16px}
+  .sheet{display:none}
+  body.sheet-open{overflow:hidden}
+  body.sheet-open .sheet{display:flex;position:fixed;left:0;right:0;bottom:0;top:var(--sheet-top,120px);z-index:19;overflow:auto;overscroll-behavior:contain;
+    background:var(--bg);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .list{overflow:visible;flex:none}
+  .li-sub{max-width:none;white-space:normal}
+  .list button{padding:10px 12px}
+  .wrap{padding-block:16px 40px}
+  header.top{margin-bottom:6px;padding-bottom:14px}
+  .grid{gap:14px}
+}
+.list button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;cursor:pointer;
+  border-bottom:1px solid var(--line)}
+.list button:hover{background:var(--raise)}
+.list button:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+.list button[aria-current="true"]{background:var(--raise);box-shadow:inset 3px 0 0 var(--brass)}
+.mono{width:32px;height:32px;flex:none;border-radius:4px;display:grid;place-items:center;
+  font:400 15px/1 var(--display);color:#fff;letter-spacing:.02em}
+.li-name{font-weight:600;font-size:14px;line-height:1.2}
+.li-sub{font-size:12px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.li-txt{min-width:0}
+
+/* Dossier */
+.dossier{min-width:0;display:flex;flex-direction:column;gap:18px}
+.hero-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px}
+.big-mono{width:84px;height:84px;border-radius:8px;display:grid;place-items:center;font:400 34px/1 var(--display);color:#fff;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.hero-head h2{font:400 clamp(30px,5vw,46px)/1.02 var(--display);margin:0;letter-spacing:.015em;text-wrap:balance}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tag{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:5px 8px;border-radius:3px;color:var(--brass)}
+.summary{margin:0;color:var(--fg);max-width:68ch}
+@media (max-width:520px){.hero-head{gap:14px;padding:16px;align-items:start}.big-mono{width:60px;height:60px;font-size:24px}.hero-head h2{font-size:30px}.card{padding:14px}.mast p{font-size:14px}}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--panel);padding:10px 14px}
+.stat b{display:block;font:500 18px var(--mono);font-variant-numeric:tabular-nums}
+.stat small{font:500 11px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+.sec-h{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:6px 0 -6px;display:flex;align-items:center;gap:10px}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.innate{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vital);border-radius:8px;padding:14px 16px}
+.innate h3{margin:0 0 4px;font:600 16px var(--body)}
+.innate p{margin:0;color:var(--fg)}
+.innate.none{border-left-color:var(--line);color:var(--muted)}
+.innate.none p{color:var(--muted)}
+.innates{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.wpn{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--weapon);border-radius:8px;padding:14px 16px}
+.wpn h3{margin:0 0 8px;font:600 16px var(--body)}
+.wpn ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.wpn li{font-size:14px}
+.wpn li::marker{color:var(--weapon)}
+
+.abil{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){.abil{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.ult{border-color:color-mix(in srgb,var(--brass) 55%,var(--line))}
+.c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-head{display:flex;gap:12px;align-items:center;min-width:0}
+.aico{flex:none;width:44px;height:44px;border-radius:8px;display:grid;place-items:center;font:600 16px var(--mono);color:#f3efe4;
+  background:color-mix(in srgb,var(--spirit) 34%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--spirit) 55%,transparent)}
+.aico.passive{background:color-mix(in srgb,var(--vital) 30%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--vital) 55%,transparent)}
+.aico.ultimate{background:color-mix(in srgb,var(--brass) 32%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brass) 60%,transparent)}
+.aico img{width:76%;height:76%;object-fit:contain;display:block}
+.aico.sm{width:20px;height:20px;border-radius:4px;font-size:10px}
+.aico.sm img{width:80%;height:80%}
+.slot{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+.key{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--line);border-radius:3px;font:500 11px var(--mono);color:var(--fg)}
+.card h4{margin:4px 0 0;font:600 18px/1.2 var(--body)}
+.kind{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:3px;white-space:nowrap}
+.kind.ability{color:var(--spirit);border:1px solid color-mix(in srgb,var(--spirit) 50%,transparent)}
+.kind.passive{color:var(--vital);border:1px solid color-mix(in srgb,var(--vital) 50%,transparent)}
+.kind.ultimate{color:var(--brass-ink);background:var(--brass)}
+.card p{margin:0}
+.cd{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.ups{list-style:none;margin:0;padding:0;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.ups li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:13.5px;color:var(--fg)}
+.pip{font:500 11px/1 var(--mono);color:var(--brass);padding-top:3px;white-space:nowrap}
+
+.shared{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.sk{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.sk h5{margin:0 0 3px;font:600 14px var(--body)}
+.sk p{margin:0;font-size:13.5px;color:var(--muted)}
+details.sharedwrap summary{cursor:pointer;list-style:none}
+details.sharedwrap summary::-webkit-details-marker{display:none}
+details.sharedwrap summary .sec-h::before{content:"▸";margin-right:2px;transition:transform .15s}
+details.sharedwrap[open] summary .sec-h::before{transform:rotate(90deg)}
+.hit{background:color-mix(in srgb,var(--brass) 30%,transparent);color:inherit;border-radius:2px}
+.sitenav{display:flex;gap:4px;margin-top:12px}
+.sitenav a{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:4px}
+.sitenav a[aria-current="page"]{color:var(--brass-ink);background:var(--brass);border-color:var(--brass)}
+.sitenav a:hover{color:var(--fg)}
+.sitenav a[aria-current="page"]:hover{color:var(--brass-ink)}
+.sitenav a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.mono.pic,.big-mono.pic{background:var(--raise)!important;box-shadow:inset 0 0 0 1px var(--line)}
+.mono img,.big-mono img{width:100%;height:100%;object-fit:contain;display:block}
+.headlinks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.headlinks a{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--brass);border:1px solid var(--line);border-radius:4px;padding:6px 10px}
+.headlinks a:hover{border-color:var(--brass)}
+.headlinks a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+footer{margin-top:32px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+footer a{color:var(--brass)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+/* Patch archive: patch list in the rail; the dossier shows notes or the archived hero state for that patch. */
+.list .pdate{font:500 11px var(--mono);color:var(--muted)}
+.ptag{font:500 10px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--brass);border:1px solid color-mix(in srgb,var(--brass) 50%,transparent);border-radius:3px;padding:3px 5px;margin-left:6px}
+.phead{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px}
+.phead h2{font:400 clamp(28px,4.5vw,42px)/1.05 var(--display);margin:0;text-wrap:balance}
+.phead .date{font:500 12px var(--mono);color:var(--muted)}
+.phead p{margin:0;max-width:75ch}
+.srcs{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.srcs a{color:var(--brass)}
+.warn{font-size:13px;color:var(--muted);border-left:3px solid var(--weapon);padding:6px 10px;background:var(--raise);border-radius:4px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{background:transparent;border:1px solid var(--line);color:var(--muted);font:600 13px var(--body);padding:8px 14px;border-radius:6px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.tab:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.counts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media (max-width:640px){.counts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.counts div{background:var(--panel);padding:10px 14px}
+.counts b{display:block;font:500 20px var(--mono)}
+.counts small{font:500 11px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.note-c{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.note-c h4{margin:0;font:600 15px var(--body);display:flex;gap:10px;align-items:center}
+.note-c h4 .mono{width:28px;height:28px;font-size:11px}
+.note-c h4 a,.note-c h4 button.hlink{all:unset;cursor:pointer;color:var(--fg)}
+.note-c h4 button.hlink:hover{color:var(--brass)}
+.note-c ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:13.5px}
+.note-c.item{border-left:3px solid var(--line)}
+.note-c.item.weapon{border-left-color:var(--weapon)} .note-c.item.vitality{border-left-color:var(--vital)} .note-c.item.spirit{border-left-color:var(--spirit)}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.hbtn{all:unset;box-sizing:border-box;cursor:pointer;display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:600 13px var(--body);position:relative}
+.hbtn:hover{border-color:var(--brass)}
+.hbtn[aria-current="true"]{box-shadow:inset 0 0 0 1px var(--brass);border-color:var(--brass)}
+.hbtn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.hbtn .mono{width:26px;height:26px;font-size:10px}
+.hbtn .chg{position:absolute;top:6px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--brass)}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.filters label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.was{display:block;font-size:12.5px;color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--weapon) 70%,transparent)}
+.is-new{background:color-mix(in srgb,var(--brass) 16%,transparent);border-radius:3px;box-shadow:0 0 0 2px color-mix(in srgb,var(--brass) 16%,transparent)}
+.card.changed{border-color:color-mix(in srgb,var(--brass) 60%,var(--line))}
+.chgtag{font:500 10px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--brass-ink);background:var(--brass);border-radius:3px;padding:3px 5px}
+.empty{color:var(--muted);font-size:14px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="mast">
+      <h1>Patch Archive</h1>
+      <p>Every Deadlock update we've tracked, with its notes and a frozen copy of every hero's kit at that patch. Changed lines are highlighted against the patch before.</p>
+      <nav class="sitenav" aria-label="Codex pages">
+        <a href="https://alex-barbosa.com/deadlock/">Heroes</a>
+        <a href="https://alex-barbosa.com/deadlock/items/">Items</a>
+        <a href="https://alex-barbosa.com/deadlock/playbook/">Playbook</a>
+        <a href="https://alex-barbosa.com/deadlock/patches/" aria-current="page">Patches</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="grid">
+    <aside class="rail">
+      <label for="q" class="count lbl">Search heroes or items in a patch</label>
+      <div class="bar">
+        <input id="q" class="search" type="search" placeholder="e.g. Kelvin, Healbane, cooldown" autocomplete="off">
+        <button class="browse" id="browse" type="button" aria-expanded="false" aria-controls="sheet">Patches <span id="bcount"></span></button>
+      </div>
+      <div class="sheet" id="sheet">
+        <div class="count" id="count"></div>
+        <ul class="list" id="list"></ul>
+      </div>
+    </aside>
+    <main class="dossier" id="dossier" aria-live="polite"><p class="empty">Loading patches…</p></main>
+  </div>
+
+  <footer>
+    Patch notes are summarized from the sources linked on each patch. Hero archives are the state this site's Hero Codex showed at that patch, so they carry the same caveats: values are condensed from the wiki and community sources, and a few balance numbers in a patch may not have reached every line.
+  </footer>
+</div>
+
+<script>
+const slug = s => s.toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function hue(name){let h=0;for(const c of name)h=(h*31+c.charCodeAt(0))%360;return h}
+function initials(n){const w=n.replace(/^The /,'').replace('&','').split(/\s+/).filter(Boolean);return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase()}
+
+/* In-game minimap icons, loaded at runtime from the deadlock-api.com assets API.
+   Any hero that doesn't resolve keeps its monogram tile. */
+const PIC = {};
+const HEROID = {};
+const HERO_API = 'https://api.deadlock-api.com/v1/assets/heroes?language=english';
+const hnorm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');
+function glyph(h){
+  const src = PIC[h.slug];
+  return src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.parentNode.classList.remove('pic');this.replaceWith(document.createTextNode('${initials(h.name)}'))">` : initials(h.name);
+}
+function applyPics(list){
+  const pickImg = x => x.mm_webp || x.mm;
+  const ok = list.filter(x => x.name && pickImg(x));
+  ok.sort((a,b) => (b.sel?1:0)-(a.sel?1:0));            // prefer playable heroes on name clashes
+  const byName = new Map(); for (const x of ok) { const k=hnorm(x.name); if(!byName.has(k)) byName.set(k,x); }
+  const missing = [];
+  for (const h of HEROES) {
+    const n = hnorm(h.name);
+    let m = byName.get(n) || ok.find(x => { const k=hnorm(x.name); return k.length>3 && (k.includes(n)||n.includes(k)); });
+    if (m) { PIC[h.slug] = pickImg(m); if (m.id!=null) HEROID[h.slug] = m.id; } else missing.push(h.name);
+  }
+  if (missing.length) console.info('[Hero Codex] no minimap icon for:', missing.join(', '));
+}
+async function loadPics(){
+  const KEY='codex-pics-v2', DAY=864e5;
+  try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<DAY && c.list) { applyPics(c.list); return true; } } catch(e){}
+  try {
+    const r = await fetch(HERO_API, {mode:'cors'}); if (!r.ok) throw new Error(r.status);
+    const list = (await r.json()).map(x => ({id:x.id, name:x.name, sel:!!x.player_selectable && !x.disabled,
+      mm_webp:x.images&&x.images.minimap_image_webp, mm:x.images&&x.images.minimap_image}));
+    applyPics(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch(e){}
+    return true;
+  } catch(e) { console.info('[Hero Codex] icons unavailable, using monograms:', e.message||e); return false; }
+}
+
+/* In-game ability icons from the same assets API (abilities are listed with the items).
+   Matched by ability name, using the hero id to break ties; anything unmatched keeps its slot number. */
+const ABIL = {};
+const ABIL_API = 'https://api.deadlock-api.com/v1/assets/items?language=english';
+const kitOf = h => h.abilities ? h.abilities.map(a=>a.name) : ((typeof KIT!=='undefined' && KIT[h.name]) ? KIT[h.name].map(a=>a[0]) : []);
+function applyAbil(list){
+  const missing=[];
+  for (const h of HEROES){
+    const id=HEROID[h.slug], mine=list.filter(x=>id!=null && x.hero===id), out={};
+    for (const name of kitOf(h)){
+      const n=hnorm(name);
+      const same=list.filter(x=>hnorm(x.name)===n);
+      let m = same.find(x=>id!=null && x.hero===id) || (same.length===1?same[0]:null)
+           || mine.find(x=>{const k=hnorm(x.name); return k.length>3 && (k.includes(n)||n.includes(k));});
+      if (m) out[name]=m.img; else missing.push(h.name+': '+name);
+    }
+    ABIL[h.slug]=out;
+  }
+  if (missing.length) console.info('[Hero Codex] no ability icon for', missing.length, 'abilities:', missing.join(', '));
+}
+async function loadAbil(){
+  const KEY='codex-abil-v1', DAY=864e5;
+  try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<DAY && c.list) { applyAbil(c.list); return true; } } catch(e){}
+  try {
+    const r = await fetch(ABIL_API, {mode:'cors'}); if (!r.ok) throw new Error(r.status);
+    const list = (await r.json()).filter(x => x && x.type==='ability' && x.name && (x.image_webp||x.image))
+      .map(x => ({name:x.name, hero: x.hero!=null ? x.hero : (Array.isArray(x.heroes)?x.heroes[0]:null), img:x.image_webp||x.image}));
+    applyAbil(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch(e){}
+    return true;
+  } catch(e) { console.info('[Hero Codex] ability icons unavailable, using slot numbers:', e.message||e); return false; }
+}
+function abilIcon(heroSlug, name, fallback){
+  const src = ABIL[heroSlug] && ABIL[heroSlug][name];
+  return src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.replaceWith(document.createTextNode('${esc(fallback)}'))">` : esc(fallback);
+}
+
+function monoStyle(n){const h=hue(n);return `background:linear-gradient(145deg,hsl(${h} 42% 38%),hsl(${(h+40)%360} 48% 22%))`}
+
+let HEROES = [];            // current patch's heroes (icon loaders match against this)
+const INDEX_URL = 'snapshots/index.json';
+const SNAP = {};            // id -> snapshot
+let PATCHES = [], cur = null, tab = 'notes', heroSel = null, onlyChanged = false, q = '';
+const TYPE = {ability:'Ability', passive:'Passive', ultimate:'Ultimate'};
+const fmtDate = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
+
+async function getSnap(id){
+  if (!SNAP[id]) { const r = await fetch('snapshots/' + id + '.json'); if (!r.ok) throw new Error('HTTP ' + r.status); SNAP[id] = await r.json(); }
+  return SNAP[id];
+}
+const prevId = id => { const i = PATCHES.findIndex(p => p.id === id); return i >= 0 && i < PATCHES.length - 1 ? PATCHES[i+1].id : null; };
+
+/* Field-level diff of one hero between two snapshots. */
+function heroDiff(h, old){
+  const d = {stats:{}, ab:{}, any:false};
+  if (!old) return d;
+  for (const k of Object.keys(h.stats)) if (h.stats[k] !== old.stats[k]) { d.stats[k] = old.stats[k]; d.any = true; }
+  for (const a of h.abilities){
+    const o = old.abilities.find(x => x.name === a.name); const r = {};
+    if (!o) { r.isNew = true; d.any = true; }
+    else {
+      if (a.desc !== o.desc) r.desc = o.desc;
+      if (a.cd !== o.cd) r.cd = o.cd ?? 'none';
+      a.up.forEach((u,i) => { if (u !== o.up[i]) (r.up = r.up || {})[i] = o.up[i]; });
+    }
+    if (Object.keys(r).length) { d.ab[a.name] = r; d.any = true; }
+  }
+  return d;
+}
+
+function renderList(){
+  const items = PATCHES;
+  $c('count').textContent = `${items.length} patch${items.length===1?'':'es'} archived`;
+  $c('list').innerHTML = items.map((p,i) => `<li><button data-p="${p.id}" aria-current="${cur && cur.id===p.id}">
+    <span class="mono" style="${monoStyle(p.title)}">${p.date.slice(5,7)}/${p.date.slice(8,10)}</span>
+    <span class="li-txt"><span class="li-name">${esc(p.title)}${i===0?'<span class="ptag">Current</span>':''}</span><br><span class="pdate">${fmtDate(p.date)}</span></span></button></li>`).join('');
+}
+const $c = id => document.getElementById(id);
+function hl(t){ const s = esc(t); if (!q) return s; const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','ig'); return s.replace(re,'<mark class="hit">$1</mark>'); }
+const match = s => !q || String(s).toLowerCase().includes(q.toLowerCase());
+
+async function show(id){
+  const snap = await getSnap(id);
+  const pid = prevId(id); const prev = pid ? await getSnap(pid).catch(() => null) : null;
+  cur = snap; HEROES = snap.heroes; HEROES.forEach(h => h.slug = slug(h.name));
+  try { history.replaceState(null, '', '#' + id); } catch(e) {}
+  render(prev); renderList();
+}
+
+function render(prev){
+  const s = cur, n = s.notes;
+  const oldBy = prev ? Object.fromEntries(prev.heroes.map(h => [h.name, h])) : {};
+  const diffs = Object.fromEntries(s.heroes.map(h => [h.name, heroDiff(h, oldBy[h.name])]));
+  const changedHeroes = s.heroes.filter(h => diffs[h.name].any).length;
+  const itemCat = Object.fromEntries(s.items.map(i => [i.name, i.cat]));
+  const tabs = [['notes','Patch notes'],['heroes','Hero archive']];
+  let body = '';
+  if (tab === 'notes') {
+    const card = (title, lines, extra='', cls='') => `<article class="note-c ${cls}"><h4>${extra}${title}</h4><ul>${lines.map(l => `<li>${hl(l)}</li>`).join('')}</ul></article>`;
+    const heroTitle = name => { const h = s.heroes.find(x => x.name === name); return h
+      ? [`<button class="hlink" data-h="${h.slug}">${hl(name)}</button>`, `<span class="mono${PIC[h.slug]?' pic':''}" style="${monoStyle(name)}">${glyph(h)}</span>`] : [hl(name), '']; };
+    const sec = (key, label, fn) => { const rows = (n[key]||[]).filter(([t,ls]) => match(t) || ls.some(match)); return rows.length ? `<div class="sec-h">${label}</div><section class="notes">${rows.map(fn).join('')}</section>` : ''; };
+    body = sec('general','General', ([t,ls]) => card(hl(t), ls))
+         + sec('heroes','Heroes', ([t,ls]) => { const [ti,ic] = heroTitle(t); return card(ti, ls, ic); })
+         + sec('items','Items', ([t,ls]) => card(`<a href="https://alex-barbosa.com/deadlock/items/#${slug(t.replace(/'/g,''))}" style="color:inherit;text-decoration:none">${hl(t)}</a>`, ls, '', 'item ' + (itemCat[t]||'')))
+         + sec('brawl','Street Brawl', ([t,ls]) => { const [ti,ic] = heroTitle(t); return card(ti, ls, ic); });
+    if (!body) body = `<p class="empty">Nothing in this patch matches “${esc(q)}”.</p>`;
+  } else {
+    const list = s.heroes.filter(h => (!onlyChanged || diffs[h.name].any) && (match(h.name) || h.abilities.some(a => match(a.name))));
+    if (!heroSel || !list.some(h => h.slug === heroSel)) heroSel = (list.find(h => diffs[h.name].any) || list[0] || {}).slug;
+    const h = s.heroes.find(x => x.slug === heroSel);
+    body = `<div class="filters"><label><input type="checkbox" id="oc" ${onlyChanged?'checked':''}> Only heroes changed in this patch (${changedHeroes})</label></div>
+      <section class="hgrid">${list.map(x => `<button class="hbtn" data-h="${x.slug}" aria-current="${x.slug===heroSel}">
+        <span class="mono${PIC[x.slug]?' pic':''}" style="${monoStyle(x.name)}">${glyph(x)}</span>${hl(x.name)}${diffs[x.name].any?'<span class="chg" title="Changed in this patch"></span>':''}</button>`).join('') || '<p class="empty">No heroes match.</p>'}</section>
+      ${h ? heroBlock(h, diffs[h.name], !!prev) : ''}`;
+  }
+  $c('dossier').innerHTML = `
+    <section class="phead"><span class="date">${fmtDate(s.date)}</span><h2>${esc(s.title)}</h2><p>${esc(s.summary)}</p>
+      <div class="srcs">${s.sources.map(([t,u]) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`).join('')}</div>
+      ${s.partial ? '<div class="warn">This is the first archived patch. Its notes are incomplete, and the hero archive below is the baseline that later patches are compared against.</div>' : ''}</section>
+    <section class="counts"><div><b>${(n.heroes||[]).length}</b><small>Heroes in notes</small></div><div><b>${(n.items||[]).length}</b><small>Items in notes</small></div>
+      <div><b>${prev ? changedHeroes : '—'}</b><small>Hero kits changed</small></div><div><b>${s.heroes.length}</b><small>Heroes archived</small></div></section>
+    <div class="tabs" role="tablist">${tabs.map(([k,l]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}</button>`).join('')}</div>
+    ${body}`;
+}
+
+function heroBlock(h, d, hasPrev){
+  const was = v => v != null ? `<span class="was">${esc(v)}</span>` : '';
+  const st = h.stats, lab = {health:'Health', bullet:'Bullet damage', rate:'Fire rate', speed:'Move speed'};
+  return `<section class="hero-head"><div class="big-mono${PIC[h.slug]?' pic':''}" style="${monoStyle(h.name)}" aria-hidden="true">${glyph(h)}</div>
+      <div style="min-width:0"><h2>${esc(h.name)}</h2><div class="tags">${h.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}${d.any?'<span class="chgtag">Changed this patch</span>':''}</div>
+      <div class="headlinks"><a href="https://alex-barbosa.com/deadlock/#${h.slug}">Current version in Hero Codex</a></div></div></section>
+    <section class="stats">${Object.keys(lab).map(k => `<div class="stat"><b class="${d.stats[k]!=null?'is-new':''}">${esc(st[k])}</b>${was(d.stats[k])}<small>${lab[k]}</small></div>`).join('')}</section>
+    ${h.innates && h.innates.length ? `<div class="sec-h">Innate</div><section class="innates">${h.innates.map(x => `<div class="innate"><h3>${esc(x.name)}</h3><p>${esc(x.desc)}</p></div>`).join('')}</section>` : ''}
+    ${h.weapon ? `<div class="sec-h">Weapon</div><section class="wpn"><h3>${esc(h.weapon.name)}</h3><ul>${h.weapon.traits.map(x => `<li>${esc(x)}</li>`).join('')}</ul></section>` : ''}
+    <div class="sec-h">Abilities at this patch</div>
+    <section class="abil">${h.abilities.map(a => { const r = d.ab[a.name] || {}; const ch = Object.keys(r).length > 0;
+      return `<article class="card ${a.type==='ultimate'?'ult':''} ${ch?'changed':''}">
+        <div class="c-top"><div class="c-head"><span class="aico ${a.type}" aria-hidden="true">${abilIcon(h.slug,a.name,String(a.slot))}</span>
+          <div style="min-width:0"><span class="slot">Slot ${a.slot}</span><h4>${hl(a.name)}</h4></div></div>
+          <span class="kind ${a.type}">${TYPE[a.type]||a.type}</span></div>
+        <p><span class="${r.desc!=null?'is-new':''}">${esc(a.desc)}</span>${was(r.desc)}</p>
+        <div class="cd"><span class="${r.cd!=null?'is-new':''}">${a.cd ? 'Cooldown ' + esc(a.cd) : 'No cooldown · always on'}</span>${r.cd!=null?` <span class="was" style="display:inline">${esc(r.cd)}</span>`:''}</div>
+        <ul class="ups">${a.up.map((u,i) => `<li><span class="pip">T${i+1} · ${[1,2,5][i]}AP</span><span><span class="${r.up&&r.up[i]!=null?'is-new':''}">${esc(u)}</span>${was(r.up&&r.up[i])}</span></li>`).join('')}</ul>
+      </article>`; }).join('')}</section>
+    ${hasPrev ? '' : '<p class="empty">This is the baseline patch, so nothing is highlighted.</p>'}`;
+}
+
+document.addEventListener('click', e => {
+  const p = e.target.closest('#list button[data-p]'); if (p) { show(p.dataset.p).then(() => window.codexPicked && codexPicked()); return; }
+  const t = e.target.closest('.tab'); if (t) { tab = t.dataset.tab; render(SNAP[prevId(cur.id)]); return; }
+  const hb = e.target.closest('[data-h]'); if (hb && cur) { heroSel = hb.dataset.h; tab = 'heroes'; render(SNAP[prevId(cur.id)]);
+    const el = document.querySelector('.hero-head'); if (el && hb.classList.contains('hlink')) el.scrollIntoView({behavior:'smooth', block:'start'}); }
+});
+document.addEventListener('change', e => { if (e.target.id === 'oc') { onlyChanged = e.target.checked; render(SNAP[prevId(cur.id)]); } });
+$c('q').addEventListener('input', e => { q = e.target.value.trim(); if (cur) render(SNAP[prevId(cur.id)]); });
+
+(async () => {
+  try {
+    const r = await fetch(INDEX_URL); if (!r.ok) throw new Error('HTTP ' + r.status);
+    PATCHES = (await r.json()).sort((a,b) => b.date.localeCompare(a.date));
+    const want = (location.hash || '').slice(1);
+    await show(PATCHES.some(p => p.id === want) ? want : PATCHES[0].id);
+    loadPics().then(() => loadAbil()).then(() => render(SNAP[prevId(cur.id)]));
+  } catch (e) {
+    $c('dossier').innerHTML = `<p class="empty">Couldn't load the patch archive (${esc(e.message)}). It loads from files next to this page, so it only works on the live site.</p>`;
+  }
+})();
+</script>
+<script>
+/* Phone layout: sticky search bar + Browse button; the list opens as a sheet under the bar. */
+(function(){
+  const mq=matchMedia('(max-width:820px)'), rail=document.querySelector('.rail'), sheet=document.getElementById('sheet'),
+        btn=document.getElementById('browse'), q=document.getElementById('q'), count=document.getElementById('count'), badge=document.getElementById('bcount');
+  const place=()=>document.documentElement.style.setProperty('--sheet-top',Math.max(0,rail.getBoundingClientRect().bottom)+'px');
+  const isOpen=()=>document.body.classList.contains('sheet-open');
+  function open(){ if(!mq.matches||isOpen()) return; place(); document.body.classList.add('sheet-open'); btn.setAttribute('aria-expanded','true'); sheet.scrollTop=0; }
+  function close(){ document.body.classList.remove('sheet-open'); btn.setAttribute('aria-expanded','false'); }
+  window.codexPicked=function(){
+    if(!mq.matches) return; close();
+    const d=document.getElementById('dossier');
+    const y=d.getBoundingClientRect().top+window.scrollY-rail.offsetHeight-12;
+    window.scrollTo({top:Math.max(0,y),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+  };
+  btn.addEventListener('click',()=>isOpen()?close():open());
+  q.addEventListener('input',()=>{ if(q.value.trim()) open(); });
+  q.addEventListener('keydown',e=>{ if(e.key==='Enter'){ const f=sheet.querySelector('.list button[data-s]'); if(f&&mq.matches){ f.click(); q.blur(); } } });
+  addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
+  mq.addEventListener('change',close); addEventListener('resize',()=>{ if(isOpen()) place(); });
+  const sync=()=>{ badge.textContent=(count.textContent.split(' of ')[0]||'').trim(); };
+  new MutationObserver(sync).observe(count,{childList:true,characterData:true,subtree:true}); sync();
+})();
+</script>
+
+</body>
+</html>
