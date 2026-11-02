@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deadlock Item Quiz</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Limelight&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: two-pane codex — roster rail on the left, a dossier for the chosen hero on the right; stacks on phones. */
+:root{
+  --bg:#0f1214; --panel:#161b1e; --raise:#1d2428; --line:#2a3337;
+  --fg:#e6e2d6; --muted:#97a09f; --brass:#d2a64a; --brass-ink:#1a1408;
+  --weapon:#e58a3a; --vital:#7cc46a; --spirit:#b48cf0;
+  --display:"Limelight","Didot","Bodoni 72",Georgia,serif;
+  --body:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#efece4; --panel:#f8f6f0; --raise:#ffffff; --line:#d8d2c3;
+  --fg:#1b1f21; --muted:#5e6463; --brass:#8a6516; --brass-ink:#fffaf0;
+  --weapon:#b55a10; --vital:#3e7f2e; --spirit:#6c45b8; color-scheme:light}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--body);margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;
+  border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:22px}
+.mast h1{font:400 clamp(34px,6vw,54px)/1 var(--display);margin:0;letter-spacing:.02em;color:var(--brass);text-wrap:balance}
+.mast p{margin:6px 0 0;color:var(--muted);max-width:60ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 12px/1 var(--mono);color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+
+.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Rail */
+.rail{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 24px)}
+.bar{display:flex;gap:8px}
+.bar .search{flex:1;min-width:0}
+.browse{display:none;align-items:center;gap:6px;flex:none;background:var(--brass);color:var(--brass-ink);border:0;border-radius:6px;padding:0 14px;font:600 14px var(--body);cursor:pointer}
+.browse span{font:500 12px var(--mono);background:color-mix(in srgb,var(--brass-ink) 16%,transparent);padding:2px 6px;border-radius:999px}
+.browse[aria-expanded="true"]{background:var(--raise);color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.browse:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.sheet{display:flex;flex-direction:column;gap:10px;min-height:0;flex:1}
+.lbl{display:block}
+[hidden]{display:none!important}
+.search{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--fg);
+  font:15px var(--body);padding:10px 12px;border-radius:6px}
+.search:focus{outline:2px solid var(--brass);outline-offset:1px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:transparent;border:1px solid var(--line);color:var(--muted);font:500 12px var(--body);
+  padding:5px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brass);color:var(--brass-ink);border-color:var(--brass)}
+.chip:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.count{font:12px var(--mono);color:var(--muted)}
+.list{list-style:none;margin:0;padding:0;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+@media (max-width:820px){
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;max-height:none;background:var(--bg);padding-block:10px;
+    box-shadow:-16px 0 0 var(--bg),16px 0 0 var(--bg),0 1px 0 var(--line)}
+  .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .browse{display:inline-flex}
+  .search{font-size:16px}
+  .sheet{display:none}
+  body.sheet-open{overflow:hidden}
+  body.sheet-open .sheet{display:flex;position:fixed;left:0;right:0;bottom:0;top:var(--sheet-top,120px);z-index:19;overflow:auto;overscroll-behavior:contain;
+    background:var(--bg);padding:12px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+  .list{overflow:visible;flex:none}
+  .li-sub{max-width:none;white-space:normal}
+  .list button{padding:10px 12px}
+  .wrap{padding-block:16px 40px}
+  header.top{margin-bottom:6px;padding-bottom:14px}
+  .grid{gap:14px}
+}
+.list button{all:unset;box-sizing:border-box;display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;cursor:pointer;
+  border-bottom:1px solid var(--line)}
+.list button:hover{background:var(--raise)}
+.list button:focus-visible{outline:2px solid var(--brass);outline-offset:-2px}
+.list button[aria-current="true"]{background:var(--raise);box-shadow:inset 3px 0 0 var(--brass)}
+.mono{width:32px;height:32px;flex:none;border-radius:4px;display:grid;place-items:center;
+  font:400 15px/1 var(--display);color:#fff;letter-spacing:.02em}
+.li-name{font-weight:600;font-size:14px;line-height:1.2}
+.li-sub{font-size:12px;color:var(--muted);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.li-txt{min-width:0}
+
+/* Dossier */
+.dossier{min-width:0;display:flex;flex-direction:column;gap:18px}
+.hero-head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px}
+.big-mono{width:84px;height:84px;border-radius:8px;display:grid;place-items:center;font:400 34px/1 var(--display);color:#fff;
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.18)}
+.hero-head h2{font:400 clamp(30px,5vw,46px)/1.02 var(--display);margin:0;letter-spacing:.015em;text-wrap:balance}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tag{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:5px 8px;border-radius:3px;color:var(--brass)}
+.summary{margin:0;color:var(--fg);max-width:68ch}
+@media (max-width:520px){.hero-head{gap:14px;padding:16px;align-items:start}.big-mono{width:60px;height:60px;font-size:24px}.hero-head h2{font-size:30px}.card{padding:14px}.mast p{font-size:14px}}
+
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{background:var(--panel);padding:10px 14px}
+.stat b{display:block;font:500 18px var(--mono);font-variant-numeric:tabular-nums}
+.stat small{font:500 11px var(--body);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+
+.sec-h{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:6px 0 -6px;display:flex;align-items:center;gap:10px}
+.sec-h::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.innate{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--vital);border-radius:8px;padding:14px 16px}
+.innate h3{margin:0 0 4px;font:600 16px var(--body)}
+.innate p{margin:0;color:var(--fg)}
+.innate.none{border-left-color:var(--line);color:var(--muted)}
+.innate.none p{color:var(--muted)}
+.innates{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.wpn{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--weapon);border-radius:8px;padding:14px 16px}
+.wpn h3{margin:0 0 8px;font:600 16px var(--body)}
+.wpn ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.wpn li{font-size:14px}
+.wpn li::marker{color:var(--weapon)}
+
+.abil{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:1000px){.abil{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card.ult{border-color:color-mix(in srgb,var(--brass) 55%,var(--line))}
+.c-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.c-head{display:flex;gap:12px;align-items:center;min-width:0}
+.aico{flex:none;width:44px;height:44px;border-radius:8px;display:grid;place-items:center;font:600 16px var(--mono);color:#f3efe4;
+  background:color-mix(in srgb,var(--spirit) 34%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--spirit) 55%,transparent)}
+.aico.passive{background:color-mix(in srgb,var(--vital) 30%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--vital) 55%,transparent)}
+.aico.ultimate{background:color-mix(in srgb,var(--brass) 32%,#101416);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brass) 60%,transparent)}
+.aico img{width:76%;height:76%;object-fit:contain;display:block}
+.aico.sm{width:20px;height:20px;border-radius:4px;font-size:10px}
+.aico.sm img{width:80%;height:80%}
+.slot{font:500 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+.key{display:inline-grid;place-items:center;width:20px;height:20px;border:1px solid var(--line);border-radius:3px;font:500 11px var(--mono);color:var(--fg)}
+.card h4{margin:4px 0 0;font:600 18px/1.2 var(--body)}
+.kind{font:500 11px/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;padding:5px 7px;border-radius:3px;white-space:nowrap}
+.kind.ability{color:var(--spirit);border:1px solid color-mix(in srgb,var(--spirit) 50%,transparent)}
+.kind.passive{color:var(--vital);border:1px solid color-mix(in srgb,var(--vital) 50%,transparent)}
+.kind.ultimate{color:var(--brass-ink);background:var(--brass)}
+.card p{margin:0}
+.cd{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.ups{list-style:none;margin:0;padding:0;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.ups li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:13.5px;color:var(--fg)}
+.pip{font:500 11px/1 var(--mono);color:var(--brass);padding-top:3px;white-space:nowrap}
+
+.shared{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.sk{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.sk h5{margin:0 0 3px;font:600 14px var(--body)}
+.sk p{margin:0;font-size:13.5px;color:var(--muted)}
+details.sharedwrap summary{cursor:pointer;list-style:none}
+details.sharedwrap summary::-webkit-details-marker{display:none}
+details.sharedwrap summary .sec-h::before{content:"▸";margin-right:2px;transition:transform .15s}
+details.sharedwrap[open] summary .sec-h::before{transform:rotate(90deg)}
+.hit{background:color-mix(in srgb,var(--brass) 30%,transparent);color:inherit;border-radius:2px}
+.sitenav{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px}
+.sitenav a{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--muted);padding:6px 10px;border:1px solid var(--line);border-radius:4px}
+.sitenav a[aria-current="page"]{color:var(--brass-ink);background:var(--brass);border-color:var(--brass)}
+.sitenav a:hover{color:var(--fg)}
+.sitenav a[aria-current="page"]:hover{color:var(--brass-ink)}
+@media (max-width:520px){.sitenav a{padding:6px 8px;letter-spacing:.05em}}
+.sitenav a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.mono.pic,.big-mono.pic{background:var(--raise)!important;box-shadow:inset 0 0 0 1px var(--line)}
+.mono img,.big-mono img{width:100%;height:100%;object-fit:contain;display:block}
+.headlinks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.headlinks a{font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;color:var(--brass);border:1px solid var(--line);border-radius:4px;padding:6px 10px}
+.headlinks a:hover{border-color:var(--brass)}
+.headlinks a:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+footer{margin-top:32px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+footer a{color:var(--brass)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+/* Quiz: one column. Scenario card (you vs. the problem), four item choices, then the reveal. */
+.qwrap{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.bar2{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.progress{flex:1;min-width:160px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--brass);transition:width .25s}
+.score{font:500 13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.scene{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.scene-top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:12px;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);background:var(--raise)}
+@media (max-width:620px){.scene-top{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.vs{display:none}}
+.side{display:flex;gap:12px;align-items:center;min-width:0}
+.side.enemy{justify-content:flex-end;text-align:right}
+.side .big-mono{width:58px;height:58px;font-size:22px}
+.side small{display:block;font:600 10.5px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.side b{display:block;font:400 22px/1.1 var(--display);overflow-wrap:anywhere}
+.side.enemy small{color:var(--weapon)}
+.vs{font:400 20px var(--display);color:var(--muted)}
+.facts{display:flex;flex-wrap:wrap;gap:6px 16px;padding:12px 18px;border-bottom:1px solid var(--line);font:500 13px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.facts b{color:var(--fg);font-weight:600}
+.facts .souls b{color:var(--brass)}
+.sit{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.sit p{margin:0;font-size:17px;line-height:1.5;max-width:70ch}
+.threat-ab{display:inline-flex;gap:8px;align-items:center;font:600 13px var(--body);background:var(--raise);border:1px solid var(--line);border-radius:6px;padding:5px 10px 5px 5px;align-self:flex-start}
+.threat-ab .aico{width:28px;height:28px}
+.ask{font:600 13px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:620px){.opts{grid-template-columns:minmax(0,1fr)}}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-height:72px;transition:border-color .15s,transform .15s}
+.opt:hover:not([disabled]){border-color:var(--brass);transform:translateY(-1px)}
+.opt:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.opt[disabled]{cursor:default}
+.opt .mono{width:46px;height:46px;font-size:14px}
+.opt b{display:block;font:600 15px var(--body)}
+.opt small{display:block;font:500 11.5px var(--mono);color:var(--muted)}
+.opt .cost{font:600 13px var(--mono);color:var(--brass);white-space:nowrap}
+.opt .cost.no{color:var(--weapon);text-decoration:line-through}
+.opt .why{grid-column:1/-1;font-size:13.5px;line-height:1.45;color:var(--fg);border-top:1px solid var(--line);padding-top:10px;margin-top:2px}
+.opt .verdict{font:600 10.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:4px 6px;border-radius:3px;margin-right:6px}
+.opt.best{border-color:var(--vital);box-shadow:inset 0 0 0 1px var(--vital)}
+.opt.best .verdict{background:var(--vital);color:#07130a}
+.opt.ok{border-color:color-mix(in srgb,var(--brass) 70%,var(--line))}
+.opt.ok .verdict{background:var(--brass);color:var(--brass-ink)}
+.opt.bad{opacity:.82}
+.opt.bad .verdict{background:color-mix(in srgb,var(--weapon) 25%,transparent);color:var(--weapon)}
+.opt.picked{outline:2px solid var(--fg);outline-offset:2px}
+.lesson{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.lesson p{margin:0;max-width:62ch}
+.lesson p b{color:var(--brass)}
+.btn{background:var(--brass);color:var(--brass-ink);border:0;border-radius:6px;padding:0 18px;min-height:42px;font:600 14px var(--body);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 1px var(--line)}
+.btn:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.start{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.start h2{margin:0;font:400 30px var(--display)}
+.start p{margin:0;max-width:65ch}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row .lbl2{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);min-width:70px}
+.done{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.done .big{font:400 54px/1 var(--display);color:var(--brass)}
+.miss{display:grid;gap:8px}
+.miss div{background:var(--raise);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:14px}
+.miss b{color:var(--vital)}
+.note2{font-size:12.5px;color:var(--muted);margin:0}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="mast">
+      <h1>Item Quiz</h1>
+      <p>Read the situation, then pick the item that gets you out of it. Every answer explains why it works, or why it doesn't.</p>
+      <nav class="sitenav" aria-label="Codex pages">
+        <a href="https://alex-barbosa.com/deadlock/">Heroes</a>
+        <a href="https://alex-barbosa.com/deadlock/items/">Items</a>
+        <a href="https://alex-barbosa.com/deadlock/playbook/">Playbook</a>
+        <a href="https://alex-barbosa.com/deadlock/quiz/" aria-current="page">Quiz</a>
+        <a href="https://alex-barbosa.com/deadlock/patches/">Patches</a>
+      </nav>
+    </div>
+  </header>
+  <div class="qwrap" id="app"></div>
+  <footer>Scenarios are written against item text as of the Oct 30, 2026 patch. Best answers score a point, reasonable answers score half. Options you can't afford with the souls shown are always wrong, the same as in a real shop.</footer>
+</div>
+
+<script>
+const QUIZ = {"patch": "2026-10-30", "q": [{"id": "haze-dance", "you": "Abrams", "time": "22:00", "phase": "mid", "souls": 5200, "enemy": "Haze", "ability": "Bullet Dance", "abilityType": "ultimate", "situation": "Every teamfight, Haze smokes in, starts Bullet Dance, and you melt before you can reach her.", "options": [{"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "best", "why": "Bullet Dance is all bullets. Metal Skin makes you immune to bullets for its duration, so pop it when she starts dancing and outlast the ult.", "afford": true}, {"item": "Bullet Resilience", "cat": "vitality", "cost": 3200, "verdict": "ok", "why": "More bullet resist helps, but a fed Haze still shreds through 30% resist. It softens the ult instead of negating it.", "afford": true}, {"item": "Spirit Shielding", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "Her ult deals weapon damage, so a spirit-damage barrier never triggers.", "afford": true}, {"item": "Unstoppable", "cat": "vitality", "cost": 6400, "verdict": "bad", "why": "Bullet Dance doesn't stun or silence you; it just shoots you. Immunity to crowd control does nothing here.", "afford": false}], "lesson": "Match the defense to the damage type. A bullet ult wants a bullet answer."}, {"id": "sustain-tanks", "you": "Haze", "time": "25:00", "phase": "late", "souls": 6500, "enemy": "Abrams", "ability": "Siphon Life", "abilityType": "ability", "situation": "Abrams and Victor sit in your team's damage and heal it all back with Siphon Life and Pain Battery.", "options": [{"item": "Toxic Bullets", "cat": "weapon", "cost": 3200, "verdict": "best", "why": "You fire 9+ bullets a second, so Toxic Bullets builds its bleed fast and cuts their healing by 40%, on whoever you're shooting.", "afford": true}, {"item": "Decay", "cat": "spirit", "cost": 3200, "verdict": "ok", "why": "Strong anti-heal, but it's one target on a 30s cooldown. Your gun applies Toxic Bullets to everyone you shoot.", "afford": true}, {"item": "Healbane", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "Healbane only triggers from spirit damage. Haze deals almost all of hers with bullets.", "afford": true}, {"item": "Glass Cannon", "cat": "weapon", "cost": 6400, "verdict": "bad", "why": "More damage helps, but without anti-heal you're still racing their healing.", "afford": true}], "lesson": "Pick the anti-heal that rides on the damage you actually deal: bullets for gun heroes, spirit for casters."}, {"id": "storm-stunned", "you": "Seven", "time": "28:00", "phase": "late", "souls": 7000, "enemy": "Bebop", "ability": "Grapple Arm", "abilityType": "ability", "situation": "Your Storm Cloud keeps getting cancelled: Bebop hooks you or someone stuns you a second into the channel.", "options": [{"item": "Unstoppable", "cat": "vitality", "cost": 6400, "verdict": "best", "why": "Activate it right before Storm Cloud. You're immune to stuns, silences and sleep, so the channel can't be broken.", "afford": true}, {"item": "Indomitable", "cat": "vitality", "cost": 6400, "verdict": "ok", "why": "It cleanses the first stun, which might be enough, but the second stun still cancels you.", "afford": true}, {"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "Your problem is crowd control, not bullet damage.", "afford": true}, {"item": "Superior Duration", "cat": "spirit", "cost": 3200, "verdict": "bad", "why": "A longer storm doesn't help if it never gets to finish.", "afford": true}], "lesson": "Channeled ultimates need protection from crowd control before you start, not after."}, {"id": "infernus-lane", "you": "Lady Geist", "time": "8:00", "phase": "lane", "souls": 1700, "enemy": "Infernus", "ability": "Afterburn", "abilityType": "passive", "situation": "In lane, Infernus's Afterburn and Napalm keep burning you down before you can trade back.", "options": [{"item": "Spirit Shielding", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Afterburn and Napalm are spirit damage. Spirit Shielding adds spirit resist and pops a barrier when that damage spikes.", "afford": true}, {"item": "Extra Health", "cat": "vitality", "cost": 800, "verdict": "ok", "why": "Raw health helps a little against everything, but it doesn't scale against a burn the way resist does.", "afford": true}, {"item": "Weapon Shielding", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "His bullets start the burn, but the burn itself is spirit damage. Weapon Shielding guards the wrong type.", "afford": true}, {"item": "Monster Rounds", "cat": "weapon", "cost": 800, "verdict": "bad", "why": "That's for farming creeps. It does nothing in a lane trade.", "afford": true}], "lesson": "Afterburn looks like gun damage, but the damage that hurts is spirit."}, {"id": "dive-backline", "you": "Kelvin", "time": "18:00", "phase": "mid", "souls": 3500, "enemy": "Lash", "ability": "Grapple", "abilityType": "ability", "situation": "Lash keeps grappling over your frontline and slamming you before your team can react.", "options": [{"item": "Slowing Hex", "cat": "spirit", "cost": 1600, "verdict": "best", "why": "It silences movement abilities and items. Hex Lash and he can't Grapple in or out of the fight.", "afford": true}, {"item": "Knockdown", "cat": "spirit", "cost": 3200, "verdict": "ok", "why": "A stun is good, but it lands after a 2s delay, and Lash has often already slammed you by then.", "afford": true}, {"item": "Healing Booster", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "Healing doesn't help if you're dead in one combo.", "afford": true}, {"item": "Cold Front", "cat": "spirit", "cost": 1600, "verdict": "bad", "why": "It slows, but doesn't stop his Grapple, which is how he gets to you.", "afford": true}], "lesson": "Against mobility divers, deny the movement ability itself."}, {"id": "sleep-dagger", "you": "Vindicta", "time": "20:00", "phase": "mid", "souls": 4000, "enemy": "Haze", "ability": "Sleep Dagger", "abilityType": "ability", "situation": "Haze opens every fight with Sleep Dagger on you, then kills you before you wake up.", "options": [{"item": "Reactive Barrier", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Being slept triggers it: a bullet barrier plus a stamina point, so you survive the opener and can dash away.", "afford": true}, {"item": "Debuff Reducer", "cat": "vitality", "cost": 1600, "verdict": "ok", "why": "You'll wake sooner, which helps, but she still gets a free burst on you.", "afford": true}, {"item": "Dispel Magic", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "It would remove the sleep, but you can't activate an item while you're asleep.", "afford": true}, {"item": "Indomitable", "cat": "vitality", "cost": 6400, "verdict": "bad", "why": "It would cleanse the sleep for you, but you can't afford it yet.", "afford": false}], "lesson": "Passive answers work while you're disabled; actives don't."}, {"id": "stop-storm", "you": "Infernus", "time": "24:00", "phase": "late", "souls": 6500, "enemy": "Seven", "ability": "Storm Cloud", "abilityType": "ultimate", "situation": "Seven channels Storm Cloud from high ground and wipes your team every fight.", "options": [{"item": "Cursed Relic", "cat": "spirit", "cost": 6400, "verdict": "best", "why": "It interrupts, silences and disarms him. Curse Seven the moment the cloud starts and the channel ends.", "afford": true}, {"item": "Silence Wave", "cat": "spirit", "cost": 3200, "verdict": "ok", "why": "Silencing him also stops the channel, but the wave is a projectile you have to land, and it's easier to dodge.", "afford": true}, {"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "Storm Cloud deals spirit damage, so bullet immunity does nothing.", "afford": true}, {"item": "Glass Cannon", "cat": "weapon", "cost": 6400, "verdict": "bad", "why": "More damage doesn't stop the ult that's killing your team.", "afford": true}], "lesson": "The best counter to a channel is to break it. You also take no damage from Storm Cloud while you're out of Seven's line of sight."}, {"id": "rattler-lane", "you": "Graves", "time": "4:30", "phase": "lane", "souls": 900, "enemy": "Vyper", "ability": "Screwjab Dagger", "abilityType": "ability", "situation": "Vyper sprays you with her fast-firing gun every time you step up to throw a jar.", "options": [{"item": "Rusted Barrel", "cat": "spirit", "cost": 800, "verdict": "best", "why": "For 800 souls it cuts her fire rate by 35% for 5s. That's huge against a hero firing 14 bullets a second.", "afford": true}, {"item": "Extra Health", "cat": "vitality", "cost": 800, "verdict": "ok", "why": "More health buys time, but she keeps her full damage.", "afford": true}, {"item": "Mystic Burst", "cat": "spirit", "cost": 800, "verdict": "bad", "why": "It adds damage to your big spirit hits but does nothing about her gun.", "afford": true}, {"item": "Sprint Boots", "cat": "vitality", "cost": 800, "verdict": "bad", "why": "Out-of-combat speed doesn't help a trade.", "afford": true}], "lesson": "Cheap fire-rate debuffs are some of the best early answers to gun heroes."}, {"id": "healing-wall", "you": "Shiv", "time": "21:00", "phase": "mid", "souls": 3400, "enemy": "Kelvin", "ability": "Frozen Shelter", "abilityType": "ultimate", "situation": "Your knife bleeds never finish anyone: Kelvin domes them and Nurse Harrow heals them up.", "options": [{"item": "Healbane", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Serrated Knives deal spirit damage, so Healbane rides on every knife and cuts their healing. It's also cheap.", "afford": true}, {"item": "Toxic Bullets", "cat": "weapon", "cost": 3200, "verdict": "ok", "why": "It also cuts healing, but your shotgun fires slowly, so the bleed builds slowly.", "afford": true}, {"item": "Extra Regen", "cat": "vitality", "cost": 800, "verdict": "bad", "why": "That heals you, not them, and it isn't the problem.", "afford": true}, {"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "Their healing is the problem, not their bullets.", "afford": true}], "lesson": "Anti-heal follows your damage type. Shiv's damage comes from his knives, which are spirit damage."}, {"id": "vyper-slows", "you": "Abrams", "time": "15:00", "phase": "mid", "souls": 3300, "enemy": "Vyper", "ability": "Screwjab Dagger", "abilityType": "ability", "situation": "You can't reach anyone: Vyper's daggers keep you slowed while her team kites you.", "options": [{"item": "Enduring Speed", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Slow resist plus move speed directly weakens every slow on you, so you can actually close the gap.", "afford": true}, {"item": "Warp Stone", "cat": "vitality", "cost": 3200, "verdict": "ok", "why": "A blink can close one gap, but every dagger after that slows you again.", "afford": true}, {"item": "Spirit Shielding", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "The problem is being slowed, not spirit damage.", "afford": true}, {"item": "Monster Rounds", "cat": "weapon", "cost": 800, "verdict": "bad", "why": "It's a farming item, so it doesn't help you engage.", "afford": true}], "lesson": "When you're kited, fix the slow before adding damage."}, {"id": "resist-stack", "you": "Haze", "time": "30:00", "phase": "late", "souls": 9000, "enemy": "Rat King", "ability": "Royal Pestments", "abilityType": "ability", "situation": "The enemy frontline has stacked bullet resist items, and your gun barely scratches them.", "options": [{"item": "Armor Piercer", "cat": "weapon", "cost": 6400, "verdict": "best", "why": "Bullets have a 60% chance to pierce and ignore bullet resist entirely, which directly undoes their stacking.", "afford": true}, {"item": "Crippling Headshot", "cat": "weapon", "cost": 6400, "verdict": "ok", "why": "It shreds resist on headshots, but that's slower and less reliable during Bullet Dance.", "afford": true}, {"item": "Leech", "cat": "vitality", "cost": 6400, "verdict": "bad", "why": "Lifesteal on damage you aren't dealing doesn't solve the resist problem.", "afford": true}, {"item": "Lucky Shot", "cat": "weapon", "cost": 6400, "verdict": "bad", "why": "Bonus damage still gets cut by their resist.", "afford": true}], "lesson": "When enemies build resist, buy resist penetration, not more raw damage."}, {"id": "full-auto", "you": "Lady Geist", "time": "32:00", "phase": "late", "souls": 8000, "enemy": "Wraith", "ability": "Full Auto", "abilityType": "ability", "situation": "Wraith teleports in with Project Mind and Full Autos you down in seconds.", "options": [{"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "best", "why": "Her burst is a short bullet window. Metal Skin makes you immune for exactly that window.", "afford": true}, {"item": "Plated Armor", "cat": "vitality", "cost": 6400, "verdict": "ok", "why": "Deflecting some bullets helps all game, but it won't fully stop a Full Auto burst.", "afford": true}, {"item": "Spirit Resilience", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "Her damage is bullets with spirit on top, so bullet defense matters more.", "afford": true}, {"item": "Refresher", "cat": "spirit", "cost": 6400, "verdict": "bad", "why": "Getting your abilities back doesn't help if you're dead.", "afford": true}], "lesson": "Short, predictable bullet bursts are exactly what an active immunity is for."}, {"id": "binding-word", "you": "Billy", "time": "14:00", "phase": "mid", "souls": 2600, "enemy": "Warden", "ability": "Binding Word", "abilityType": "ability", "situation": "Warden lands Binding Word on you every fight; you get immobilized before you can melee anyone.", "options": [{"item": "Reactive Barrier", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Being immobilized triggers a barrier and gives you a stamina point, so you survive the lockdown and dash back in.", "afford": true}, {"item": "Debuff Reducer", "cat": "vitality", "cost": 1600, "verdict": "ok", "why": "It shortens the immobilize, which helps, but you still take the full burst.", "afford": true}, {"item": "Weapon Shielding", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "It only triggers on heavy weapon damage, not crowd control.", "afford": true}, {"item": "Melee Charge", "cat": "weapon", "cost": 1600, "verdict": "bad", "why": "More melee damage doesn't help if you can't reach anyone.", "afford": true}], "lesson": "Early crowd control has a cheap passive answer that procs while you're disabled."}, {"id": "singularity", "you": "Haze", "time": "28:00", "phase": "late", "souls": 7000, "enemy": "Dynamo", "ability": "Singularity", "abilityType": "ultimate", "situation": "Dynamo's Singularity pulls and stuns your team every fight, right when you want to Bullet Dance.", "options": [{"item": "Unstoppable", "cat": "vitality", "cost": 6400, "verdict": "best", "why": "Activate it before you dive. You can't be stunned, so you can dance while their team is clumped.", "afford": true}, {"item": "Indomitable", "cat": "vitality", "cost": 6400, "verdict": "ok", "why": "It cleanses one stun, but Singularity keeps pulling and can catch you again.", "afford": true}, {"item": "Divine Barrier", "cat": "vitality", "cost": 6400, "verdict": "bad", "why": "It cleanses non-stun debuffs only, and Singularity is a stun.", "afford": true}, {"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "Singularity is a pull and stun, not bullets.", "afford": true}], "lesson": "Read each item's cleanse type: Divine Barrier doesn't remove stuns, but Unstoppable prevents them."}, {"id": "napalm-debuffs", "you": "Victor", "time": "19:00", "phase": "mid", "souls": 3400, "enemy": "Infernus", "ability": "Napalm", "abilityType": "ability", "situation": "Napalm coats you so you take extra damage and heal less, and your Pain Battery heals feel useless.", "options": [{"item": "Dispel Magic", "cat": "vitality", "cost": 3200, "verdict": "best", "why": "It removes non-ultimate debuffs like Napalm and Afterburn, and heals and speeds you up when it does.", "afford": true}, {"item": "Spirit Shielding", "cat": "vitality", "cost": 1600, "verdict": "ok", "why": "It reduces the spirit damage, but the anti-heal and damage amp stay on you.", "afford": true}, {"item": "Healing Booster", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "Boosting healing that Napalm is still cutting is a weak trade.", "afford": true}, {"item": "Weapon Shielding", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "Napalm is spirit damage.", "afford": true}], "lesson": "Debuffs that amplify damage or cut healing are worth cleansing."}, {"id": "gun-lane", "you": "Lady Geist", "time": "6:00", "phase": "lane", "souls": 1700, "enemy": "Wraith", "ability": "Card Trick", "abilityType": "ability", "situation": "Wraith out-trades you in lane with her gun and keeps you too low to cast your self-damage spells.", "options": [{"item": "Weapon Shielding", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Bullet resist plus a barrier when weapon damage spikes is the cheapest counter to a gun lane.", "afford": true}, {"item": "Rusted Barrel", "cat": "spirit", "cost": 800, "verdict": "ok", "why": "Cutting her fire rate also helps, but only for 5s, on a cooldown.", "afford": true}, {"item": "Spirit Shielding", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "Most of her lane damage is bullets.", "afford": true}, {"item": "Extra Spirit", "cat": "spirit", "cost": 800, "verdict": "bad", "why": "More damage doesn't fix the fact that you're losing the trades.", "afford": true}], "lesson": "Identify which damage type is winning the lane, then resist it."}, {"id": "sky-sniper", "you": "Seven", "time": "22:00", "phase": "mid", "souls": 6600, "enemy": "Vindicta", "ability": "Flight", "abilityType": "ability", "situation": "Vindicta flies above every fight and snipes your team; you can't reach her.", "options": [{"item": "Knockdown", "cat": "spirit", "cost": 3200, "verdict": "best", "why": "48m range, and the stun lasts longer on airborne targets. It drops her out of Flight for your team to kill.", "afford": true}, {"item": "Slowing Hex", "cat": "spirit", "cost": 1600, "verdict": "ok", "why": "Silencing her movement abilities can help, but it doesn't stun her, and she can still shoot.", "afford": true}, {"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "ok", "why": "It saves you from one volley but doesn't stop her killing your teammates.", "afford": true}, {"item": "Monster Rounds", "cat": "weapon", "cost": 800, "verdict": "bad", "why": "A farming item does nothing against a hero in the air.", "afford": true}], "lesson": "Some items are built for airborne heroes. Knockdown is the clearest example."}, {"id": "abrams-lane", "you": "Lady Geist", "time": "7:00", "phase": "lane", "souls": 1700, "enemy": "Abrams", "ability": "Siphon Life", "abilityType": "ability", "situation": "In lane, Abrams heals back everything you deal with Siphon Life and Infernal Resilience.", "options": [{"item": "Healbane", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Your bombs and Malice are spirit damage, so Healbane cuts his healing for only 1600 souls.", "afford": true}, {"item": "Extra Spirit", "cat": "spirit", "cost": 800, "verdict": "ok", "why": "More damage helps you race him, but he still heals a lot of it back.", "afford": true}, {"item": "Toxic Bullets", "cat": "weapon", "cost": 3200, "verdict": "bad", "why": "Right idea, but it costs 3200, and your damage isn't from bullets anyway.", "afford": false}, {"item": "Rebuttal", "cat": "vitality", "cost": 800, "verdict": "bad", "why": "A parry item doesn't help you win a damage race.", "afford": true}], "lesson": "Cheap anti-heal in lane beats more damage against sustain heroes."}, {"id": "geist-burst", "you": "Haze", "time": "18:00", "phase": "mid", "souls": 3300, "enemy": "Lady Geist", "ability": "Essence Bomb", "abilityType": "ability", "situation": "Lady Geist's Essence Bomb and Malice burst you down before you can stack Fixation.", "options": [{"item": "Spirit Shielding", "cat": "vitality", "cost": 1600, "verdict": "best", "why": "Her burst is spirit damage. A cheap barrier that triggers on spirit spikes plus spirit resist.", "afford": true}, {"item": "Spirit Resilience", "cat": "vitality", "cost": 3200, "verdict": "ok", "why": "Good spirit resist, but it only ramps up below 50% health, which is late against burst.", "afford": true}, {"item": "Weapon Shielding", "cat": "vitality", "cost": 1600, "verdict": "bad", "why": "Her damage is spirit, not bullets.", "afford": true}, {"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "Bullet immunity doesn't stop her spells.", "afford": true}], "lesson": "For burst, a barrier that triggers on the spike usually beats resist that ramps up later."}, {"id": "hyper-beam", "you": "Paige", "time": "21:00", "phase": "mid", "souls": 3500, "enemy": "Bebop", "ability": "Hyper Beam", "abilityType": "ultimate", "situation": "Bebop floats above your team channeling Hyper Beam and heals off the damage.", "options": [{"item": "Knockdown", "cat": "spirit", "cost": 3200, "verdict": "best", "why": "He's airborne while channeling, and Knockdown's stun lasts longer on airborne targets, ending the beam.", "afford": true}, {"item": "Silence Wave", "cat": "spirit", "cost": 3200, "verdict": "ok", "why": "A silence also stops the channel, but you have to land the wave on someone floating in the air.", "afford": true}, {"item": "Cursed Relic", "cat": "spirit", "cost": 6400, "verdict": "bad", "why": "It would shut him down, but you can't afford it yet.", "afford": false}, {"item": "Metal Skin", "cat": "vitality", "cost": 3200, "verdict": "bad", "why": "Hyper Beam isn't bullets.", "afford": true}], "lesson": "Within your budget, the best counter is the one that interrupts the channel."}]};
+const ITEMS = [{"name": "Close Quarters", "cat": "weapon", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Extended Magazine", "cat": "weapon", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Headshot Booster", "cat": "weapon", "tier": 1, "kind": "passive", "cost": 800}, {"name": "High-Velocity Rounds", "cat": "weapon", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Monster Rounds", "cat": "weapon", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Rapid Rounds", "cat": "weapon", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Restorative Shot", "cat": "weapon", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Active Reload", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Fleetfoot", "cat": "weapon", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Intensifying Magazine", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Kinetic Dash", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Long Range", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Melee Charge", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Mystic Shot", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Opening Rounds", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Recharging Rush", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Slowing Bullets", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Spirit Shredder", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Split Shot", "cat": "weapon", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Stalker", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Swift Striker", "cat": "weapon", "tier": 2, "kind": "stat", "cost": 1600}, {"name": "Titanic Magazine", "cat": "weapon", "tier": 2, "kind": "stat", "cost": 1600}, {"name": "Weakening Headshot", "cat": "weapon", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Alchemical Fire", "cat": "weapon", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Ballistic Enchantment", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Berserker", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Blood Tribute", "cat": "weapon", "tier": 3, "kind": "toggle", "cost": 3200}, {"name": "Burst Fire", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Cultist Sacrifice", "cat": "weapon", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Escalating Resilience", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Express Shot", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Headhunter", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Heroic Aura", "cat": "weapon", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Hollow Point", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Hunter's Aura", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Point Blank", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Shadow Weave", "cat": "weapon", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Sharpshooter", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Spirit Rend", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Tesla Bullets", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Toxic Bullets", "cat": "weapon", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Weighted Shots", "cat": "weapon", "tier": 3, "kind": "stat", "cost": 3200}, {"name": "Armor Piercer", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Capacitor", "cat": "weapon", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Crippling Headshot", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Crushing Fists", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Frenzy", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Glass Cannon", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Lucky Shot", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Ricochet", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Silencer", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Spellslinger", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Spiritual Overflow", "cat": "weapon", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Haunting Shot", "cat": "weapon", "tier": 5, "kind": "passive", "cost": null}, {"name": "Infinite Rounds", "cat": "weapon", "tier": 5, "kind": "passive", "cost": null}, {"name": "Runed Gauntlets", "cat": "weapon", "tier": 5, "kind": "passive", "cost": null}, {"name": "Extra Health", "cat": "vitality", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Extra Regen", "cat": "vitality", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Extra Stamina", "cat": "vitality", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Grit", "cat": "vitality", "tier": 1, "kind": "active", "cost": 800}, {"name": "Healing Rite", "cat": "vitality", "tier": 1, "kind": "active", "cost": 800}, {"name": "Melee Lifesteal", "cat": "vitality", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Rebuttal", "cat": "vitality", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Sprint Boots", "cat": "vitality", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Battle Vest", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Bullet Lifesteal", "cat": "vitality", "tier": 2, "kind": "stat", "cost": 1600}, {"name": "Debuff Reducer", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Enchanter's Emblem", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Enduring Speed", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Guardian Ward", "cat": "vitality", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Healbane", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Healing Booster", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Reactive Barrier", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Restorative Locket", "cat": "vitality", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Return Fire", "cat": "vitality", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Spirit Lifesteal", "cat": "vitality", "tier": 2, "kind": "stat", "cost": 1600}, {"name": "Spirit Shielding", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Trophy Collector", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Weapon Shielding", "cat": "vitality", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Bullet Resilience", "cat": "vitality", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Counterspell", "cat": "vitality", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Dispel Magic", "cat": "vitality", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Fortitude", "cat": "vitality", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Fury Trance", "cat": "vitality", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Healing Nova", "cat": "vitality", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Lifestrike", "cat": "vitality", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Majestic Leap", "cat": "vitality", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Metal Skin", "cat": "vitality", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Rescue Beam", "cat": "vitality", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Spirit Resilience", "cat": "vitality", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Stamina Mastery", "cat": "vitality", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Veil Walker", "cat": "vitality", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Warp Stone", "cat": "vitality", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Cheat Death", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Colossus", "cat": "vitality", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Divine Barrier", "cat": "vitality", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Diviner's Kevlar", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Healing Tempo", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Indomitable", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Infuser", "cat": "vitality", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Inhibitor", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Juggernaut", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Leech", "cat": "vitality", "tier": 4, "kind": "stat", "cost": 6400}, {"name": "Phantom Strike", "cat": "vitality", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Plated Armor", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Siphon Bullets", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Spellbreaker", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Unstoppable", "cat": "vitality", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Vampiric Burst", "cat": "vitality", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Witchmail", "cat": "vitality", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Celestial Blessing", "cat": "vitality", "tier": 5, "kind": "active", "cost": null}, {"name": "Cloak of Opportunity", "cat": "vitality", "tier": 5, "kind": "passive", "cost": null}, {"name": "Electric Slippers", "cat": "vitality", "tier": 5, "kind": "passive", "cost": null}, {"name": "Eternal Gift", "cat": "vitality", "tier": 5, "kind": "passive", "cost": null}, {"name": "Nullification Burst", "cat": "vitality", "tier": 5, "kind": "active", "cost": null}, {"name": "Seraphim Wings", "cat": "vitality", "tier": 5, "kind": "passive", "cost": null}, {"name": "Shadow Strike", "cat": "vitality", "tier": 5, "kind": "active", "cost": null}, {"name": "Extra Charge", "cat": "spirit", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Extra Spirit", "cat": "spirit", "tier": 1, "kind": "stat", "cost": 800}, {"name": "Golden Goose Egg", "cat": "spirit", "tier": 1, "kind": "active", "cost": 800}, {"name": "Mystic Burst", "cat": "spirit", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Mystic Expansion", "cat": "spirit", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Mystic Regeneration", "cat": "spirit", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Rusted Barrel", "cat": "spirit", "tier": 1, "kind": "active", "cost": 800}, {"name": "Spirit Strike", "cat": "spirit", "tier": 1, "kind": "passive", "cost": 800}, {"name": "Arcane Surge", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Bullet Resist Shredder", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Cold Front", "cat": "spirit", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Compress Cooldown", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Duration Extender", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Improved Spirit", "cat": "spirit", "tier": 2, "kind": "stat", "cost": 1600}, {"name": "Mystic Slow", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Mystic Vulnerability", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Quicksilver Reload", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Slowing Hex", "cat": "spirit", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Spirit Sap", "cat": "spirit", "tier": 2, "kind": "active", "cost": 1600}, {"name": "Suppressor", "cat": "spirit", "tier": 2, "kind": "passive", "cost": 1600}, {"name": "Decay", "cat": "spirit", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Disarming Hex", "cat": "spirit", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Greater Expansion", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Knockdown", "cat": "spirit", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Radiant Regeneration", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Rapid Recharge", "cat": "spirit", "tier": 3, "kind": "stat", "cost": 3200}, {"name": "Silence Wave", "cat": "spirit", "tier": 3, "kind": "active", "cost": 3200}, {"name": "Spirit Snatch", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Superior Cooldown", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Superior Duration", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Surge of Power", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Tankbuster", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Torment Pulse", "cat": "spirit", "tier": 3, "kind": "passive", "cost": 3200}, {"name": "Arctic Blast", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Boundless Spirit", "cat": "spirit", "tier": 4, "kind": "stat", "cost": 6400}, {"name": "Cursed Relic", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Echo Shard", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Escalating Exposure", "cat": "spirit", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Ethereal Shift", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Focus Lens", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Lightning Scroll", "cat": "spirit", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Magic Carpet", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Mercurial Magnum", "cat": "spirit", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Mystic Reverb", "cat": "spirit", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Refresher", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Scourge", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Spirit Burn", "cat": "spirit", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Transcendent Cooldown", "cat": "spirit", "tier": 4, "kind": "passive", "cost": 6400}, {"name": "Vortex Web", "cat": "spirit", "tier": 4, "kind": "active", "cost": 6400}, {"name": "Frostbite Charm", "cat": "spirit", "tier": 5, "kind": "passive", "cost": null}, {"name": "Mystic Conduit", "cat": "spirit", "tier": 5, "kind": "passive", "cost": null}, {"name": "Mystical Piano", "cat": "spirit", "tier": 5, "kind": "active", "cost": null}, {"name": "Omnicharge Signet", "cat": "spirit", "tier": 5, "kind": "passive", "cost": null}, {"name": "Prism Blast", "cat": "spirit", "tier": 5, "kind": "active", "cost": null}, {"name": "Shrink Ray", "cat": "spirit", "tier": 5, "kind": "active", "cost": null}, {"name": "Unstable Concoction", "cat": "spirit", "tier": 5, "kind": "active", "cost": null}];
+const slug = s => s.toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function hue(name){let h=0;for(const c of name)h=(h*31+c.charCodeAt(0))%360;return h}
+function initials(n){const w=n.replace(/^The /,'').replace('&','').split(/\s+/).filter(Boolean);return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase()}
+
+/* In-game minimap icons, loaded at runtime from the deadlock-api.com assets API.
+   Any hero that doesn't resolve keeps its monogram tile. */
+const PIC = {};
+const HEROID = {};
+const HERO_API = 'https://api.deadlock-api.com/v1/assets/heroes?language=english';
+const hnorm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');
+function glyph(h){
+  const src = PIC[h.slug];
+  return src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.parentNode.classList.remove('pic');this.replaceWith(document.createTextNode('${initials(h.name)}'))">` : initials(h.name);
+}
+function applyPics(list){
+  const pickImg = x => x.mm_webp || x.mm;
+  const ok = list.filter(x => x.name && pickImg(x));
+  ok.sort((a,b) => (b.sel?1:0)-(a.sel?1:0));            // prefer playable heroes on name clashes
+  const byName = new Map(); for (const x of ok) { const k=hnorm(x.name); if(!byName.has(k)) byName.set(k,x); }
+  const missing = [];
+  for (const h of HEROES) {
+    const n = hnorm(h.name);
+    let m = byName.get(n) || ok.find(x => { const k=hnorm(x.name); return k.length>3 && (k.includes(n)||n.includes(k)); });
+    if (m) { PIC[h.slug] = pickImg(m); if (m.id!=null) HEROID[h.slug] = m.id; } else missing.push(h.name);
+  }
+  if (missing.length) console.info('[Hero Codex] no minimap icon for:', missing.join(', '));
+}
+async function loadPics(){
+  const KEY='codex-pics-v2', DAY=864e5;
+  try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<DAY && c.list) { applyPics(c.list); return true; } } catch(e){}
+  try {
+    const r = await fetch(HERO_API, {mode:'cors'}); if (!r.ok) throw new Error(r.status);
+    const list = (await r.json()).map(x => ({id:x.id, name:x.name, sel:!!x.player_selectable && !x.disabled,
+      mm_webp:x.images&&x.images.minimap_image_webp, mm:x.images&&x.images.minimap_image}));
+    applyPics(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch(e){}
+    return true;
+  } catch(e) { console.info('[Hero Codex] icons unavailable, using monograms:', e.message||e); return false; }
+}
+
+/* In-game ability icons from the same assets API (abilities are listed with the items).
+   Matched by ability name, using the hero id to break ties; anything unmatched keeps its slot number. */
+const ABIL = {};
+const ABIL_API = 'https://api.deadlock-api.com/v1/assets/items?language=english';
+const kitOf = h => h.abilities ? h.abilities.map(a=>a.name) : ((typeof KIT!=='undefined' && KIT[h.name]) ? KIT[h.name].map(a=>a[0]) : []);
+function applyAbil(list){
+  const missing=[];
+  for (const h of HEROES){
+    const id=HEROID[h.slug], mine=list.filter(x=>id!=null && x.hero===id), out={};
+    for (const name of kitOf(h)){
+      const n=hnorm(name);
+      const same=list.filter(x=>hnorm(x.name)===n);
+      let m = same.find(x=>id!=null && x.hero===id) || (same.length===1?same[0]:null)
+           || mine.find(x=>{const k=hnorm(x.name); return k.length>3 && (k.includes(n)||n.includes(k));});
+      if (m) out[name]=m.img; else missing.push(h.name+': '+name);
+    }
+    ABIL[h.slug]=out;
+  }
+  if (missing.length) console.info('[Hero Codex] no ability icon for', missing.length, 'abilities:', missing.join(', '));
+}
+async function loadAbil(){
+  const KEY='codex-abil-v1', DAY=864e5;
+  try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<DAY && c.list) { applyAbil(c.list); return true; } } catch(e){}
+  try {
+    const r = await fetch(ABIL_API, {mode:'cors'}); if (!r.ok) throw new Error(r.status);
+    const list = (await r.json()).filter(x => x && x.type==='ability' && x.name && (x.image_webp||x.image))
+      .map(x => ({name:x.name, hero: x.hero!=null ? x.hero : (Array.isArray(x.heroes)?x.heroes[0]:null), img:x.image_webp||x.image}));
+    applyAbil(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch(e){}
+    return true;
+  } catch(e) { console.info('[Hero Codex] ability icons unavailable, using slot numbers:', e.message||e); return false; }
+}
+function abilIcon(heroSlug, name, fallback){
+  const src = ABIL[heroSlug] && ABIL[heroSlug][name];
+  return src ? `<img src="${esc(src)}" alt="" decoding="async" onerror="this.replaceWith(document.createTextNode('${esc(fallback)}'))">` : esc(fallback);
+}
+
+function monoStyle(n){const h=hue(n);return `background:linear-gradient(145deg,hsl(${h} 42% 38%),hsl(${(h+40)%360} 48% 22%))`}
+
+const ICON = {};
+const ICON_API = 'https://api.deadlock-api.com/v1/assets/items?language=english';
+const ALIAS = {armorpiercer:['armorpiercingrounds','armorpiercing'], spiritshredder:['spiritshredderbullets'], goldengooseegg:['goldenegg'], heroicaura:['heroesaura']};
+const norm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]/g,'');
+function iglyph(i){
+  const urls = ICON[i.slug];
+  if (!urls || !urls.length) return initials(i.name);
+  return `<img src="${esc(urls[0])}" alt="" decoding="async" data-alt="${esc(JSON.stringify(urls.slice(1)))}" data-fb="${initials(i.name)}" onerror="iconFail(this)">`;
+}
+/* If an image URL fails, try the next variant before falling back to the monogram. */
+function iconFail(img){
+  let rest=[]; try{ rest=JSON.parse(img.dataset.alt||'[]'); }catch(e){}
+  if (rest.length){ img.dataset.alt=JSON.stringify(rest.slice(1)); img.src=rest[0]; return; }
+  img.replaceWith(document.createTextNode(img.dataset.fb||''));
+}
+function applyIcons(list){
+  const shop = list.filter(x => x && x.name && (x.shop_image_webp || x.shop_image || x.image_webp || x.image)
+    && (x.type === 'upgrade' || x.item_slot_type));
+  // Several entries can share a name (old, disabled or other-mode versions). Group them and rank per item.
+  const byName = new Map();
+  for (const x of shop) { const k = norm(x.name); if (!byName.has(k)) byName.set(k, []); byName.get(k).push(x); }
+  const urls = x => [x.shop_image_webp, x.shop_image, x.image_webp, x.image].filter(Boolean).filter((u,ix,a)=>a.indexOf(u)===ix);
+  const best = (cands, i) => cands.slice().sort((a,b)=>score(b,i)-score(a,i))[0];
+  const score = (x, i) => (x.item_slot_type===i.cat?8:0) + (x.shopable?4:0) + (!x.disabled?4:0) + (x.item_tier===i.tier?2:0) + (x.shop_image_webp||x.shop_image?1:0);
+  let hits = 0; const missing = [];
+  for (const i of ITEMS) {
+    const n = norm(i.name);
+    let c = byName.get(n);
+    if (!c) for (const a of (ALIAS[n] || [])) { c = byName.get(a); if (c) break; }
+    let m = c ? best(c, i) : null;
+    if (!m) m = shop.find(x => { const k = norm(x.name);
+      return (!x.item_slot_type || x.item_slot_type === i.cat) && k.length > 4 && (k.startsWith(n) || n.startsWith(k)); });
+    if (m) { ICON[i.slug] = urls(m); hits++; } else missing.push(i.name);
+  }
+  document.documentElement.dataset.icons = hits;
+  if (missing.length) console.info('[Item Codex] no icon for', missing.length, 'items:', missing.join(', '));
+  return hits;
+}
+async function loadIcons(){
+  const KEY = 'icodex-icons-v2', DAY = 864e5;
+  try { const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (c && Date.now() - c.t < DAY && c.list) { applyIcons(c.list); return true; } } catch (e) {}
+  try {
+    const r = await fetch(ICON_API, {mode: 'cors'});
+    if (!r.ok) throw new Error(r.status);
+    const raw = await r.json();
+    const list = raw.map(x => ({name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
+      shop_image_webp: x.shop_image_webp, shop_image: x.shop_image, image_webp: x.image_webp, image: x.image}))
+      .filter(x => x.shop_image_webp || x.shop_image || x.image_webp || x.image);
+    applyIcons(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t: Date.now(), list})); } catch (e) {}
+    return true;
+  } catch (e) { console.info('[Item Codex] icons unavailable, using monograms:', e.message || e); return false; }
+}
+
+const HEROES = [{"name": "Abrams", "abilities": [{"name": "Siphon Life"}, {"name": "Shoulder Charge"}, {"name": "Infernal Resilience"}, {"name": "Seismic Impact"}]}, {"name": "Apollo", "abilities": [{"name": "Disengaging Sigil"}, {"name": "Riposte"}, {"name": "Flawless Advance"}, {"name": "Itani Lo Sahn"}]}, {"name": "Baba", "abilities": [{"name": "Threadsap"}, {"name": "Granny Long Legs"}, {"name": "Baba's Brew"}, {"name": "Feed The Birds"}]}, {"name": "Bebop", "abilities": [{"name": "Exploding Uppercut"}, {"name": "Sticky Bomb"}, {"name": "Grapple Arm"}, {"name": "Hyper Beam"}]}, {"name": "Billy", "abilities": [{"name": "Bashdown"}, {"name": "Rising Ram"}, {"name": "Blasted"}, {"name": "Chain Gang"}]}, {"name": "Calico", "abilities": [{"name": "Gloom Bombs"}, {"name": "Leaping Slash"}, {"name": "Ava"}, {"name": "Return to Shadows"}]}, {"name": "Celeste", "abilities": [{"name": "Light Eater"}, {"name": "Dazzling Trick"}, {"name": "Radiant Daggers"}, {"name": "Shining Wonder"}]}, {"name": "Deadman Danny", "abilities": [{"name": "Strix Salvo"}, {"name": "Chimera Mk1"}, {"name": "Jettison Fuel"}, {"name": "Close The Deal"}]}, {"name": "The Doorman", "abilities": [{"name": "Call Bell"}, {"name": "Doorway"}, {"name": "Luggage Cart"}, {"name": "Hotel Guest"}]}, {"name": "Drifter", "abilities": [{"name": "Rend"}, {"name": "Stalker's Mark"}, {"name": "Bloodscent"}, {"name": "Eternal Night"}]}, {"name": "Dynamo", "abilities": [{"name": "Kinetic Pulse"}, {"name": "Quantum Entanglement"}, {"name": "Rejuvenating Aurora"}, {"name": "Singularity"}]}, {"name": "Graves", "abilities": [{"name": "Jar of Dead"}, {"name": "Grasping Hands"}, {"name": "Essence Theft"}, {"name": "Borrowed Decree"}]}, {"name": "Grey Talon", "abilities": [{"name": "Charged Shot"}, {"name": "Rain of Arrows"}, {"name": "Spirit Snare"}, {"name": "Guided Owl"}]}, {"name": "Haze", "abilities": [{"name": "Sleep Dagger"}, {"name": "Smoke Bomb"}, {"name": "Fixation"}, {"name": "Bullet Dance"}]}, {"name": "Holliday", "abilities": [{"name": "Powder Keg"}, {"name": "Bounce Pad"}, {"name": "Crackshot"}, {"name": "Spirit Lasso"}]}, {"name": "Infernus", "abilities": [{"name": "Napalm"}, {"name": "Flame Dash"}, {"name": "Afterburn"}, {"name": "Concussive Combustion"}]}, {"name": "Ivy", "abilities": [{"name": "Entangling Thorns"}, {"name": "Kudzu Connection"}, {"name": "Stone Form"}, {"name": "Air Drop"}]}, {"name": "Kelvin", "abilities": [{"name": "Frost Grenade"}, {"name": "Ice Path"}, {"name": "Arctic Beam"}, {"name": "Frozen Shelter"}]}, {"name": "Lady Geist", "abilities": [{"name": "Essence Bomb"}, {"name": "Life Drain"}, {"name": "Malice"}, {"name": "Soul Exchange"}]}, {"name": "Lash", "abilities": [{"name": "Ground Strike"}, {"name": "Grapple"}, {"name": "Flog"}, {"name": "Death Slam"}]}, {"name": "McGinnis", "abilities": [{"name": "Mini Turret"}, {"name": "Medicinal Specter"}, {"name": "Spectral Wall"}, {"name": "Heavy Barrage"}]}, {"name": "Mina", "abilities": [{"name": "Rake"}, {"name": "Sanguine Retreat"}, {"name": "Love Bites"}, {"name": "Nox Nostra"}]}, {"name": "Mirage", "abilities": [{"name": "Fire Scarabs"}, {"name": "Dust Devil"}, {"name": "Djinn's Mark"}, {"name": "Traveler"}]}, {"name": "Mo & Krill", "abilities": [{"name": "Scorn"}, {"name": "Burrow"}, {"name": "Sand Blast"}, {"name": "Combo"}]}, {"name": "Nurse Harrow", "abilities": [{"name": "Leech Therapy"}, {"name": "Wretched Vapors"}, {"name": "Healing Needles"}, {"name": "Lurking Terrors"}]}, {"name": "Paige", "abilities": [{"name": "Bookwyrm"}, {"name": "Plot Armor"}, {"name": "Captivating Read"}, {"name": "Rallying Charge"}]}, {"name": "Paradox", "abilities": [{"name": "Pulse Grenade"}, {"name": "Time Wall"}, {"name": "Kinetic Carbine"}, {"name": "Paradoxical Swap"}]}, {"name": "Pocket", "abilities": [{"name": "Barrage"}, {"name": "Flying Cloak"}, {"name": "Enchanter's Satchel"}, {"name": "Affliction"}]}, {"name": "Rat King", "abilities": [{"name": "Scrap Grenade"}, {"name": "Rat Swarm"}, {"name": "Royal Pestments"}, {"name": "Rule, Ratannia!"}]}, {"name": "Rem", "abilities": [{"name": "Pillow Toss"}, {"name": "Tag Along"}, {"name": "Lil Helpers"}, {"name": "Naptime"}]}, {"name": "Seven", "abilities": [{"name": "Lightning Ball"}, {"name": "Static Charge"}, {"name": "Power Surge"}, {"name": "Storm Cloud"}]}, {"name": "Shiv", "abilities": [{"name": "Serrated Knives"}, {"name": "Slice and Dice"}, {"name": "Bloodletting"}, {"name": "Killing Blow"}]}, {"name": "Silver", "abilities": [{"name": "Slam Fire"}, {"name": "Boot Kick"}, {"name": "Entangling Bola"}, {"name": "Lycan Curse"}]}, {"name": "Sinclair", "abilities": [{"name": "Vexing Bolt"}, {"name": "Spectral Assistant"}, {"name": "Rabbit Hex"}, {"name": "Audience Participation"}]}, {"name": "Solomon", "abilities": [{"name": "Setup Bishop"}, {"name": "Kingside Knight"}, {"name": "Rook Battery"}, {"name": "Develop Queen"}]}, {"name": "Venator", "abilities": [{"name": "Consecrating Grenade"}, {"name": "Gutshot"}, {"name": "Hex-Lined Snap Trap"}, {"name": "Ira Domini"}]}, {"name": "Victor", "abilities": [{"name": "Pain Battery"}, {"name": "Jumpstart"}, {"name": "Aura of Suffering"}, {"name": "Shocking Reanimation"}]}, {"name": "Vindicta", "abilities": [{"name": "Stake"}, {"name": "Flight"}, {"name": "Crow Familiar"}, {"name": "Assassinate"}]}, {"name": "Violet", "abilities": [{"name": "Living Ink"}, {"name": "Flow State"}, {"name": "Still Life"}, {"name": "Abstract Landscape"}]}, {"name": "Viscous", "abilities": [{"name": "Splatter"}, {"name": "The Cube"}, {"name": "Puddle Punch"}, {"name": "Goo Ball"}]}, {"name": "Vyper", "abilities": [{"name": "Screwjab Dagger"}, {"name": "Lethal Venom"}, {"name": "Slither"}, {"name": "Petrifying Bola"}]}, {"name": "Warden", "abilities": [{"name": "Alchemical Flask"}, {"name": "Willpower"}, {"name": "Binding Word"}, {"name": "Last Stand"}]}, {"name": "Wraith", "abilities": [{"name": "Card Trick"}, {"name": "Project Mind"}, {"name": "Full Auto"}, {"name": "Telekinesis"}]}, {"name": "Yamato", "abilities": [{"name": "Power Slash"}, {"name": "Flying Slash"}, {"name": "Crimson Slash"}, {"name": "Shadow Transformation"}]}];
+HEROES.forEach(h=>h.slug=slug(h.name));
+ITEMS.forEach(i=>i.slug=i.name.toLowerCase().replace(/'/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''));
+const ITEMBY = Object.fromEntries(ITEMS.map(i=>[i.name,i]));
+const HBY = Object.fromEntries(HEROES.map(h=>[h.name,h]));
+const app = document.getElementById('app');
+const PHASES = {all:'All', lane:'Laning', mid:'Mid game', late:'Late game'};
+let phase='all', size=10, round=[], idx=0, score=0, answered=false, missed=[];
+let best=null; try{ best=JSON.parse(localStorage.getItem('quiz-best')||'null'); }catch(e){}
+
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const heroTile = (name,cls='big-mono') => { const h=HBY[name]; return `<span class="${cls}${PIC[h.slug]?' pic':''}" style="${monoStyle(name)}">${glyph(h)}</span>`; };
+const itemTile = name => { const i=ITEMBY[name]; return `<span class="mono ${i.cat}">${iglyph(i)}</span>`; };
+
+function startScreen(){
+  const pool=QUIZ.q.filter(q=>phase==='all'||q.phase===phase);
+  app.innerHTML=`<section class="start"><h2>Buy the right item</h2>
+    <p>Each round drops you into a moment from a match: who you're playing, how many souls you have, and what keeps going wrong. Pick the item that fixes it. ${QUIZ.q.length} scenarios so far.</p>
+    <div class="row"><span class="lbl2">Phase</span>${Object.entries(PHASES).map(([k,v])=>`<button class="chip" data-phase="${k}" aria-pressed="${phase===k}">${v}</button>`).join('')}</div>
+    <div class="row"><span class="lbl2">Length</span>${[5,10,'All'].map(n=>`<button class="chip" data-size="${n}" aria-pressed="${String(size)===String(n)}">${n==='All'?'All '+pool.length:n+' questions'}</button>`).join('')}</div>
+    <div class="row"><button class="btn" id="go">Start</button>${best?`<span class="note2">Your best: ${best.score}/${best.of}</span>`:''}</div></section>`;
+}
+function begin(){
+  const pool=shuffle(QUIZ.q.filter(q=>phase==='all'||q.phase===phase));
+  round=size==='All'?pool:pool.slice(0,Math.min(size,pool.length));
+  round=round.map(q=>({...q, options:shuffle(q.options)}));
+  idx=0; score=0; missed=[]; ask();
+}
+function ask(){
+  answered=false; const q=round[idx];
+  const ab=q.ability?`<span class="threat-ab"><span class="aico ${q.abilityType}">${abilIcon(slug(q.enemy),q.ability,'!')}</span>${esc(q.enemy)}'s ${esc(q.ability)}</span>`:'';
+  app.innerHTML=`<div class="bar2"><div class="progress"><i style="width:${100*idx/round.length}%"></i></div>
+      <span class="score">Question ${idx+1} of ${round.length} · Score ${fmt(score)}</span></div>
+    <section class="scene">
+      <div class="scene-top">
+        <div class="side">${heroTile(q.you)}<div><small>You're playing</small><b>${esc(q.you)}</b></div></div>
+        <span class="vs">vs</span>
+        <div class="side enemy"><div><small>The problem</small><b>${esc(q.enemy)}</b></div>${heroTile(q.enemy)}</div>
+      </div>
+      <div class="facts"><span>Game time <b>${esc(q.time)}</b></span><span>${PHASES[q.phase]}</span><span class="souls">Souls to spend <b>${q.souls.toLocaleString()}</b></span></div>
+      <div class="sit"><p>${esc(q.situation)}</p>${ab}</div>
+    </section>
+    <div class="ask">What do you buy?</div>
+    <section class="opts">${q.options.map((o,i)=>`<button class="opt" data-i="${i}">
+      ${itemTile(o.item)}<span><b>${esc(o.item)}</b><small>${o.cat[0].toUpperCase()+o.cat.slice(1)} · ${esc(ITEMBY[o.item].kind==='stat'?'Stats':ITEMBY[o.item].kind[0].toUpperCase()+ITEMBY[o.item].kind.slice(1))}</small></span>
+      <span class="cost">${o.cost.toLocaleString()}</span></button>`).join('')}</section>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+const fmt = n => Number.isInteger(n) ? String(n) : n.toFixed(1);
+function reveal(pick){
+  if(answered) return; answered=true;
+  const q=round[idx], chosen=q.options[pick];
+  score += chosen.verdict==='best'?1:chosen.verdict==='ok'?0.5:0;
+  if(chosen.verdict!=='best') missed.push({q, chosen});
+  const label={best:'Best pick', ok:'Works, not best', bad:'Wrong pick'};
+  document.querySelectorAll('.opt').forEach((b,i)=>{ const o=q.options[i]; b.disabled=true;
+    b.classList.add(o.verdict); if(i===pick) b.classList.add('picked');
+    b.querySelector('.cost').classList.toggle('no',!o.afford);
+    b.insertAdjacentHTML('beforeend',`<div class="why"><span class="verdict">${o.afford?label[o.verdict]:"Can't afford"}</span>${esc(o.why)}</div>`); });
+  const last=idx===round.length-1;
+  document.querySelector('.opts').insertAdjacentHTML('afterend',`<section class="lesson"><p><b>${chosen.verdict==='best'?'Nice.':chosen.verdict==='ok'?'Half credit.':'Not quite.'}</b> ${esc(q.lesson)}</p>
+    <button class="btn" id="next">${last?'See results':'Next question'}</button></section>`);
+  document.querySelector('.score').textContent=`Question ${idx+1} of ${round.length} · Score ${fmt(score)}`;
+  document.getElementById('next').focus({preventScroll:true});
+}
+function finish(){
+  const pct=Math.round(100*score/round.length);
+  if(!best || score/round.length > best.score/best.of){ best={score:fmt(score),of:round.length}; try{localStorage.setItem('quiz-best',JSON.stringify(best));}catch(e){} }
+  app.innerHTML=`<section class="done"><span class="note2">Round complete</span><span class="big">${fmt(score)} / ${round.length}</span>
+    <p>${pct>=85?'You know your counters. ':pct>=60?'Solid instincts, with a few gaps. ':"Keep at it: the explanations are where the learning is. "}${missed.length?'Here\'s what to remember:':'A perfect round.'}</p>
+    ${missed.length?`<div class="miss">${missed.map(m=>{const b=m.q.options.find(o=>o.verdict==='best');return `<div>${esc(m.q.you)} vs ${esc(m.q.enemy)}${m.q.ability?" ("+esc(m.q.ability)+")":''}: you picked ${esc(m.chosen.item)}, the best answer is <b>${esc(b.item)}</b>. ${esc(m.q.lesson)}</div>`}).join('')}</div>`:''}
+    <div class="row"><button class="btn" id="again">Play again</button><button class="btn ghost" id="menu">Change settings</button>
+      <a class="btn ghost" style="display:inline-flex;align-items:center;text-decoration:none" href="https://alex-barbosa.com/deadlock/items/">Browse items</a></div></section>`;
+}
+app.addEventListener('click',e=>{
+  const ph=e.target.closest('[data-phase]'); if(ph){ phase=ph.dataset.phase; startScreen(); return; }
+  const sz=e.target.closest('[data-size]'); if(sz){ size=sz.dataset.size==='All'?'All':Number(sz.dataset.size); startScreen(); return; }
+  if(e.target.id==='go'||e.target.id==='again') return begin();
+  if(e.target.id==='menu') return startScreen();
+  const o=e.target.closest('.opt'); if(o) return reveal(Number(o.dataset.i));
+  if(e.target.id==='next'){ if(idx<round.length-1){idx++;ask();} else finish(); }
+});
+document.addEventListener('keydown',e=>{ if(answered||!round.length||!document.querySelector('.opt')) return; const n=Number(e.key); if(n>=1&&n<=4) reveal(n-1); });
+startScreen();
+const rerender=()=>{ if(document.querySelector('.opt') && !answered) ask(); else if(document.querySelector('.start')) startScreen(); };
+loadPics().then(()=>loadAbil()).then(()=>loadIcons()).then(rerender);
+</script>
+
+</body>
+</html>
