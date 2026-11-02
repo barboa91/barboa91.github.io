@@ -256,6 +256,22 @@ footer a{color:var(--brass)}
 .hchip:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 .hchip .mono{width:22px;height:22px;font-size:10px;border-radius:50%}
 .muted-note{font-size:13px;color:var(--muted);margin:0}
+.lanes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.lanes{grid-template-columns:minmax(0,1fr)}}
+.lane-c{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.lane-c.avoid{border-top:3px solid var(--weapon)} .lane-c.pair{border-top:3px solid var(--vital)}
+.lane-c h5{margin:0;font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.lane-c.avoid h5{color:var(--weapon)} .lane-c.pair h5{color:var(--vital)}
+.lane-c h5 span{font:500 11px var(--mono);color:var(--muted);text-transform:none;letter-spacing:0}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;font-size:13px;font-variant-numeric:tabular-nums}
+.lrow .hchip{justify-self:start}
+.lrow .d{font:600 12px var(--mono);min-width:56px;text-align:right}
+.lrow .d.neg{color:var(--weapon)} .lrow .d.pos{color:var(--vital)}
+.lrow .g{font:500 11px var(--mono);color:var(--muted);min-width:96px;text-align:right}
+.lane-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.lane-tools button{background:transparent;border:1px solid var(--line);color:var(--muted);font:600 12px var(--body);padding:5px 10px;border-radius:999px;cursor:pointer}
+.lane-tools button[aria-pressed="true"]{background:var(--brass);border-color:var(--brass);color:var(--brass-ink)}
+.lane-tools button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
 
 .items3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:900px){.items3{grid-template-columns:minmax(0,1fr)}}
@@ -488,6 +504,59 @@ function cheeseBlock(h){
       <p class="counter"><b>Counter:</b> ${esc(c.counter)}</p>
     </article>`).join('')}</section>`;
 }
+/* Live lane-partner data: deadlock-api hero-synergy-stats with same_lane_filter (both heroes in the same lane, same team).
+   Each duo's win rate is compared with what the two heroes' own win rates predict, so a strong hero next to a weak one isn't flagged unfairly. */
+const DUO_WINDOWS = {month:{label:'Last 30 days', min:()=>Math.floor(Date.now()/1000)-30*86400}, patch:{label:'Since Oct 30 patch', min:()=>Math.floor(Date.UTC(2026,9,30)/1000)}};
+let duoWin = 'month', DUO = {}, DUOSTATE = {};       // DUO[win][heroId] -> sorted partner rows
+function idToHero(){ const m={}; for (const h of HEROES){ const id=HEROID[h.slug]; if(id!=null) m[id]=h; } return m; }
+async function loadDuos(win){
+  if (DUO[win] || DUOSTATE[win]==='loading') return;
+  DUOSTATE[win]='loading';
+  const KEY='pbook-duo-'+win+'-v1', TTL=6*3600e3;
+  try {
+    let data=null;
+    try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if(c && Date.now()-c.t<TTL) data=c.v; } catch(e){}
+    if (!data) {
+      const since=DUO_WINDOWS[win].min(), base='https://api.deadlock-api.com/v1/analytics/';
+      const [pairs, solo] = await Promise.all([
+        fetch(`${base}hero-synergy-stats?same_lane_filter=true&min_matches=40&min_unix_timestamp=${since}`).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }),
+        fetch(`${base}hero-stats?min_unix_timestamp=${since}`).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }),
+      ]);
+      data={pairs:pairs.map(p=>[p.hero_id1,p.hero_id2,p.wins,p.matches_played]), solo:solo.map(s=>[s.hero_id,s.wins,s.matches])};
+      try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), v:data})); } catch(e){}
+    }
+    const wr={}; for (const [id,w,m] of data.solo) if (m>0) wr[id]=w/m;
+    const out={};
+    for (const [a,b,w,m] of data.pairs){
+      if (wr[a]==null || wr[b]==null || !m) continue;
+      const exp=wr[a]+wr[b]-0.5, pwr=w/m;
+      // shrink small samples toward the expected value so a lucky 40-game duo doesn't top the list
+      const k=m/(m+150), delta=k*(pwr-exp);
+      (out[a]=out[a]||[]).push({id:b,pwr,exp,delta,m}); (out[b]=out[b]||[]).push({id:a,pwr,exp,delta,m});
+    }
+    for (const id in out) out[id].sort((x,y)=>x.delta-y.delta);
+    DUO[win]=out; DUOSTATE[win]='ok';
+  } catch(e) { DUOSTATE[win]='err:'+(e.message||e); console.info('[Playbook] lane data unavailable:', e.message||e); }
+  const box=document.getElementById('lanebox'); const h=HEROES.find(x=>x.slug===state.cur); if (box && h) box.innerHTML=laneBlock(h);
+}
+function laneRow(r, byId){
+  const p=byId[r.id]; if(!p) return '';
+  const d=Math.round(r.delta*1000)/10;
+  return `<div class="lrow">${heroChip(p.name)}<span class="d ${d<0?'neg':'pos'}">${d>0?'+':''}${d.toFixed(1)}%</span><span class="g">${(r.pwr*100).toFixed(1)}% · ${r.m.toLocaleString()} games</span></div>`;
+}
+function laneBlock(h){
+  const tools=`<div class="lane-tools">${Object.entries(DUO_WINDOWS).map(([k,v])=>`<button type="button" data-duowin="${k}" aria-pressed="${duoWin===k}">${v.label}</button>`).join('')}
+    <span>Both heroes on your team, same lane. The % is how far the duo's win rate lands above or below what the two heroes' own win rates predict; only gaps of 1.5 points or more are listed.</span></div>`;
+  const st=DUOSTATE[duoWin];
+  if (!st) { setTimeout(()=>loadDuos(duoWin),0); return tools+'<p class="muted-note">Loading live lane data…</p>'; }
+  if (st==='loading') return tools+'<p class="muted-note">Loading live lane data…</p>';
+  if (st.startsWith('err')) return tools+'<p class="muted-note">Live lane data is unavailable right now (it loads from deadlock-api.com, so it only works on the live site). Try again later.</p>';
+  const id=HEROID[h.slug], byId=idToHero(), rows=(DUO[duoWin]||{})[id]||[];
+  if (id==null || !rows.length) return tools+'<p class="muted-note">Not enough recent duo games for this hero yet.</p>';
+  const bad=rows.filter(r=>r.delta<=-0.015).slice(0,6), good=rows.slice().reverse().filter(r=>r.delta>=0.015).slice(0,6);
+  const col=(cls,title,list,empty)=>`<div class="lane-c ${cls}"><h5>${title}<span>vs. expected · duo WR · games</span></h5>${list.length?list.map(r=>laneRow(r,byId)).join(''):`<p class="muted-note">${empty}</p>`}</div>`;
+  return tools+`<section class="lanes">${col('avoid','Avoid laning with',bad,'No clearly bad lane partners in this window.')}${col('pair','Lane well with',good,'No standout lane partners in this window.')}</section>`;
+}
 function renderHero(s){
   const h=HEROES.find(x=>x.slug===s)||HEROES[0];
   state.cur=h.slug;
@@ -539,6 +608,8 @@ function renderHero(s){
     <div class="sec-h">Matchups</div>
     <section class="mu">${mu('hard','Hardest matchups',h.hard)}${mu('easy','Easiest matchups',h.easy)}${mu('duo','Best partners',h.partners)}</section>
     <p class="threat">${esc(h.threat_note)}</p>
+    <div class="sec-h">Lane partners</div>
+    <div id="lanebox">${laneBlock(h)}</div>
     <div class="sec-h">Item path</div>
     <section class="items3">${items}</section>
     ${cheeseBlock(h)}`;
@@ -547,7 +618,7 @@ function renderHero(s){
 
 function go(s){ renderHero(s); try{history.replaceState(null,'','#'+s)}catch(_){}; window.codexPicked&&codexPicked(); }
 document.getElementById('list').addEventListener('click',e=>{const b=e.target.closest('button[data-s]'); if(b) go(b.dataset.s);});
-document.getElementById('dossier').addEventListener('click',e=>{const b=e.target.closest('button.hchip'); if(b) go(b.dataset.s);});
+document.getElementById('dossier').addEventListener('click',e=>{const w=e.target.closest('[data-duowin]'); if(w){ duoWin=w.dataset.duowin; const h=HEROES.find(x=>x.slug===state.cur); document.getElementById('lanebox').innerHTML=laneBlock(h); return; } const b=e.target.closest('button.hchip'); if(b) go(b.dataset.s);});
 function refilter(){ save(); const f=filtered(); if(f.length&&!f.some(x=>x.slug===state.cur)) renderHero(f[0].slug); else renderList(); }
 document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value.trim(); refilter();});
 document.querySelectorAll('.chip[data-diff]').forEach(b=>{b.setAttribute('aria-pressed',state.diff.has(b.dataset.diff));
