@@ -303,7 +303,9 @@ footer a{color:var(--brass)}
   border:1px dashed color-mix(in srgb,var(--weapon) 45%,var(--line));color:var(--muted);font:400 20px/1 var(--body);background:color-mix(in srgb,var(--weapon) 5%,transparent)}
 .vslot:hover{border-color:var(--weapon);color:var(--fg)}
 .vslot.full{border:1px solid var(--weapon);background:var(--raise);outline:1px solid color-mix(in srgb,var(--weapon) 45%,transparent);outline-offset:0}
-.vslot .mono{width:100%;height:100%;border-radius:5px;font-size:12px}
+.vslot.full{padding:3px}
+.vslot .mono.pic{box-shadow:none!important}
+.vslot .mono{width:100%;height:100%;border-radius:4px;font-size:12px}
 .vslot i{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--weapon);color:#fff;font:700 11px/16px var(--body);text-align:center;font-style:normal;opacity:0;transition:opacity .12s}
 .vslot.full:hover i,.vslot.full:focus-visible i{opacity:1}
 .vslot:focus-visible,.vtile:focus-visible,.vsbar .clr:focus-visible,.btn-sm:focus-visible,#vsq:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
