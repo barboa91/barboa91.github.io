@@ -335,6 +335,45 @@ function iconFail(img){
   img.replaceWith(document.createTextNode(img.dataset.fb||''));
 }
 const ITEMID = {};
+function applyIcons(list){
+  const shop = list.filter(x => x && x.name && (x.shop_image_webp || x.shop_image || x.image_webp || x.image)
+    && (x.type === 'upgrade' || x.item_slot_type));
+  // Several entries can share a name (old, disabled or other-mode versions). Group them and rank per item.
+  const byName = new Map();
+  for (const x of shop) { const k = norm(x.name); if (!byName.has(k)) byName.set(k, []); byName.get(k).push(x); }
+  const urls = x => [x.shop_image_webp, x.shop_image, x.image_webp, x.image].filter(Boolean).filter((u,ix,a)=>a.indexOf(u)===ix);
+  const best = (cands, i) => cands.slice().sort((a,b)=>score(b,i)-score(a,i))[0];
+  const score = (x, i) => (x.item_slot_type===i.cat?8:0) + (x.shopable?4:0) + (!x.disabled?4:0) + (x.item_tier===i.tier?2:0) + (x.shop_image_webp||x.shop_image?1:0);
+  let hits = 0; const missing = [];
+  for (const i of ITEMS) {
+    const n = norm(i.name);
+    let c = byName.get(n);
+    if (!c) for (const a of (ALIAS[n] || [])) { c = byName.get(a); if (c) break; }
+    let m = c ? best(c, i) : null;
+    if (!m) m = shop.find(x => { const k = norm(x.name);
+      return (!x.item_slot_type || x.item_slot_type === i.cat) && k.length > 4 && (k.startsWith(n) || n.startsWith(k)); });
+    if (m) { ICON[i.slug] = urls(m); if (m.id != null) ITEMID[i.slug] = m.id; hits++; } else missing.push(i.name);
+  }
+  document.documentElement.dataset.icons = hits;
+  if (missing.length) console.info('[Item Codex] no icon for', missing.length, 'items:', missing.join(', '));
+  return hits;
+}
+async function loadIcons(){
+  const KEY = 'icodex-icons-v3', DAY = 864e5;
+  try { const c = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (c && Date.now() - c.t < DAY && c.list) { applyIcons(c.list); return true; } } catch (e) {}
+  try {
+    const r = await fetch(ICON_API, {mode: 'cors'});
+    if (!r.ok) throw new Error(r.status);
+    const raw = await r.json();
+    const list = raw.map(x => ({id: x.id, name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
+      shop_image_webp: x.shop_image_webp, shop_image: x.shop_image, image_webp: x.image_webp, image: x.image}))
+      .filter(x => x.shop_image_webp || x.shop_image || x.image_webp || x.image);
+    applyIcons(list);
+    try { localStorage.setItem(KEY, JSON.stringify({t: Date.now(), list})); } catch (e) {}
+    return true;
+  } catch (e) { console.info('[Item Codex] icons unavailable, using monograms:', e.message || e); return false; }
+}
 /* Heroes who buy each item, live from deadlock-api: item purchases bucketed by hero, divided by that hero's matches. */
 const HEROES = ["Abrams", "Apollo", "Baba", "Bebop", "Billy", "Calico", "Celeste", "Deadman Danny", "The Doorman", "Drifter", "Dynamo", "Graves", "Grey Talon", "Haze", "Holliday", "Infernus", "Ivy", "Kelvin", "Lady Geist", "Lash", "McGinnis", "Mina", "Mirage", "Mo & Krill", "Nurse Harrow", "Paige", "Paradox", "Pocket", "Rat King", "Rem", "Seven", "Shiv", "Silver", "Sinclair", "Solomon", "Venator", "Victor", "Vindicta", "Violet", "Viscous", "Vyper", "Warden", "Wraith", "Yamato"];
 const hslug = s => s.toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
@@ -387,45 +426,6 @@ function buyersHtml(i){
     <span class="bnote">${withRate?'Share of each hero\'s matches where they bought it':'Most purchases by hero'}, last 30 days of matches.</span>`;
 }
 function paintBuyers(){ const el=document.getElementById('buyers'); const i=ITEMS.find(x=>x.slug===state.cur); if(el&&i){ const h=buyersHtml(i); el.innerHTML=h; el.hidden=!h; } }
-function applyIcons(list){
-  const shop = list.filter(x => x && x.name && (x.shop_image_webp || x.shop_image || x.image_webp || x.image)
-    && (x.type === 'upgrade' || x.item_slot_type));
-  // Several entries can share a name (old, disabled or other-mode versions). Group them and rank per item.
-  const byName = new Map();
-  for (const x of shop) { const k = norm(x.name); if (!byName.has(k)) byName.set(k, []); byName.get(k).push(x); }
-  const urls = x => [x.shop_image_webp, x.shop_image, x.image_webp, x.image].filter(Boolean).filter((u,ix,a)=>a.indexOf(u)===ix);
-  const best = (cands, i) => cands.slice().sort((a,b)=>score(b,i)-score(a,i))[0];
-  const score = (x, i) => (x.item_slot_type===i.cat?8:0) + (x.shopable?4:0) + (!x.disabled?4:0) + (x.item_tier===i.tier?2:0) + (x.shop_image_webp||x.shop_image?1:0);
-  let hits = 0; const missing = [];
-  for (const i of ITEMS) {
-    const n = norm(i.name);
-    let c = byName.get(n);
-    if (!c) for (const a of (ALIAS[n] || [])) { c = byName.get(a); if (c) break; }
-    let m = c ? best(c, i) : null;
-    if (!m) m = shop.find(x => { const k = norm(x.name);
-      return (!x.item_slot_type || x.item_slot_type === i.cat) && k.length > 4 && (k.startsWith(n) || n.startsWith(k)); });
-    if (m) { ICON[i.slug] = urls(m); if (m.id != null) ITEMID[i.slug] = m.id; hits++; } else missing.push(i.name);
-  }
-  document.documentElement.dataset.icons = hits;
-  if (missing.length) console.info('[Item Codex] no icon for', missing.length, 'items:', missing.join(', '));
-  return hits;
-}
-async function loadIcons(){
-  const KEY = 'icodex-icons-v3', DAY = 864e5;
-  try { const c = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (c && Date.now() - c.t < DAY && c.list) { applyIcons(c.list); return true; } } catch (e) {}
-  try {
-    const r = await fetch(ICON_API, {mode: 'cors'});
-    if (!r.ok) throw new Error(r.status);
-    const raw = await r.json();
-    const list = raw.map(x => ({id: x.id, name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
-      shop_image_webp: x.shop_image_webp, shop_image: x.shop_image, image_webp: x.image_webp, image: x.image}))
-      .filter(x => x.shop_image_webp || x.shop_image || x.image_webp || x.image);
-    applyIcons(list);
-    try { localStorage.setItem(KEY, JSON.stringify({t: Date.now(), list})); } catch (e) {}
-    return true;
-  } catch (e) { console.info('[Item Codex] icons unavailable, using monograms:', e.message || e); return false; }
-}
 
 const order = {weapon:0,vitality:1,spirit:2};
 ITEMS.forEach(i=>i.slug=slug(i.name));
