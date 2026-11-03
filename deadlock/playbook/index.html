@@ -589,7 +589,7 @@ function vsBar(h){
     <div class="vslots">${slots}</div>
     ${VS.length?'<button type="button" class="clr" id="vsclr" data-fk="clr">Clear</button>':''}
     ${!vsOpen?`<button type="button" class="clr" data-vsopen="1" data-fk="open">${VS.length?'Edit lineup':'Choose enemy heroes'}</button>`:''}
-    <span class="hint">${VS.length?'Each phase now lists the items that answer what these heroes do to you.':'Optional: add up to 6 enemies to see which items matter most against them in each phase.'}</span>
+    ${VS.length?'':'<span class="hint">Optional: add up to 6 enemies to see which items matter most against them in each phase.</span>'}
     ${grid}</div>`;
 }
 const heroMini = n => { const hh=HEROES.find(x=>x.name===n); return hh?`<span class="mono${PIC[hh.slug]?' pic':''}" style="${monoStyle(n)}" aria-hidden="true">${glyph(hh)}</span>`:''; };
@@ -789,7 +789,7 @@ function rerenderVS(fk){ const y=scrollY; renderHero(state.cur); scrollTo(0,y); 
 document.getElementById('dossier').addEventListener('input',e=>{ if(e.target.id==='vsq'){ vsQ=e.target.value; rerenderVS('q'); } });
 document.getElementById('dossier').addEventListener('keydown',e=>{ if(e.key==='Escape'&&vsOpen){ vsOpen=false; rerenderVS('open'); } });
 document.getElementById('dossier').addEventListener('click',e=>{
-  const t=e.target.closest('[data-vstog]'); if(t){ const n=t.dataset.vstog; VS=VS.includes(n)?VS.filter(x=>x!==n):VS.concat(n).slice(0,6); saveVS(); rerenderVS('t-'+n); return; }
+  const t=e.target.closest('[data-vstog]'); if(t){ const n=t.dataset.vstog; VS=VS.includes(n)?VS.filter(x=>x!==n):VS.concat(n).slice(0,6); saveVS(); if(VS.length===6){ vsOpen=false; vsQ=''; rerenderVS('open'); } else rerenderVS('t-'+n); return; }
   const rm=e.target.closest('[data-vsrm]'); if(rm){ VS=VS.filter(n=>n!==rm.dataset.vsrm); saveVS(); rerenderVS(vsOpen?'q':'open'); return; }
   if(e.target.closest('[data-vsopen]')){ vsOpen=true; rerenderVS('q'); return; }
   if(e.target.closest('[data-vsdone]')){ vsOpen=false; vsQ=''; rerenderVS('open'); return; }
