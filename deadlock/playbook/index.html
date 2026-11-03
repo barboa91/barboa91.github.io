@@ -302,7 +302,7 @@ footer a{color:var(--brass)}
 .vslot{all:unset;box-sizing:border-box;cursor:pointer;width:42px;height:42px;border-radius:6px;display:grid;place-items:center;position:relative;
   border:1px dashed color-mix(in srgb,var(--weapon) 45%,var(--line));color:var(--muted);font:400 20px/1 var(--body);background:color-mix(in srgb,var(--weapon) 5%,transparent)}
 .vslot:hover{border-color:var(--weapon);color:var(--fg)}
-.vslot.full{border:1px solid color-mix(in srgb,var(--weapon) 70%,var(--line));background:var(--raise);box-shadow:0 0 0 1px color-mix(in srgb,var(--weapon) 30%,transparent)}
+.vslot.full{border:1px solid var(--weapon);background:var(--raise);outline:1px solid color-mix(in srgb,var(--weapon) 45%,transparent);outline-offset:0}
 .vslot .mono{width:100%;height:100%;border-radius:5px;font-size:12px}
 .vslot i{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--weapon);color:#fff;font:700 11px/16px var(--body);text-align:center;font-style:normal;opacity:0;transition:opacity .12s}
 .vslot.full:hover i,.vslot.full:focus-visible i{opacity:1}
@@ -315,19 +315,19 @@ footer a{color:var(--brass)}
 #vsq{flex:1 1 180px;max-width:260px;padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--raise);color:var(--fg);font:14px var(--body)}
 .vsg-top .note{font:500 12px var(--mono);color:var(--muted)}
 .btn-sm{all:unset;cursor:pointer;margin-left:auto;font:600 12.5px var(--body);color:var(--brass-ink);background:var(--brass);border-radius:6px;padding:6px 14px}
-.vsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}
-.vtile{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px 5px;border-radius:6px;
-  background:var(--raise);border:1px solid var(--line);min-width:0;transition:border-color .12s,transform .12s}
+.vsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));grid-auto-rows:76px;gap:6px}
+.vtile{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;height:76px;padding:7px 2px 0;border-radius:6px;
+  background:var(--raise);border:1px solid var(--line);min-width:0;transition:border-color .12s}
 .vtile .mono{width:44px;height:44px;border-radius:5px;font-size:14px}
-.vtile span{font:500 10.5px var(--body);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
-.vtile:hover:not([disabled]){border-color:var(--weapon);transform:translateY(-1px)}
-.vtile.on{border-color:var(--weapon);box-shadow:0 0 0 1px var(--weapon) inset;background:color-mix(in srgb,var(--weapon) 12%,var(--raise))}
+.vtile span{font:500 10.5px/14px var(--body);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.vtile:hover:not([disabled]){border-color:var(--weapon)}
+.vtile.on{border-color:var(--weapon);outline:2px solid var(--weapon);outline-offset:-2px;background:color-mix(in srgb,var(--weapon) 12%,var(--raise))}
 .vtile.on span{color:var(--fg)}
 .vtile em{position:absolute;top:3px;right:3px;min-width:15px;height:15px;border-radius:3px;background:var(--weapon);color:#fff;font:700 10px/15px var(--mono);font-style:normal;text-align:center}
 .vtile em.you{background:var(--brass);color:var(--brass-ink);padding:0 3px;font-size:9px}
 .vtile[disabled]{cursor:not-allowed;opacity:.38}
 .vtile[disabled] .mono{filter:grayscale(1)}
-@media (max-width:520px){.vsgrid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr))}.vtile .mono{width:38px;height:38px}.vslot{width:38px;height:38px}}
+@media (max-width:520px){.vsgrid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));grid-auto-rows:70px}.vtile{height:70px}.vtile .mono{width:38px;height:38px}.vslot{width:38px;height:38px}}
 .items3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:900px){.items3{grid-template-columns:minmax(0,1fr)}}
 .ig{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
