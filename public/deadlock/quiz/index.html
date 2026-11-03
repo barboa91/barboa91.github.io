@@ -396,6 +396,7 @@ function iconFail(img){
   if (rest.length){ img.dataset.alt=JSON.stringify(rest.slice(1)); img.src=rest[0]; return; }
   img.replaceWith(document.createTextNode(img.dataset.fb||''));
 }
+const ITEMID = {};
 function applyIcons(list){
   const shop = list.filter(x => x && x.name && (x.shop_image_webp || x.shop_image || x.image_webp || x.image)
     && (x.type === 'upgrade' || x.item_slot_type));
@@ -413,21 +414,21 @@ function applyIcons(list){
     let m = c ? best(c, i) : null;
     if (!m) m = shop.find(x => { const k = norm(x.name);
       return (!x.item_slot_type || x.item_slot_type === i.cat) && k.length > 4 && (k.startsWith(n) || n.startsWith(k)); });
-    if (m) { ICON[i.slug] = urls(m); hits++; } else missing.push(i.name);
+    if (m) { ICON[i.slug] = urls(m); if (m.id != null) ITEMID[i.slug] = m.id; hits++; } else missing.push(i.name);
   }
   document.documentElement.dataset.icons = hits;
   if (missing.length) console.info('[Item Codex] no icon for', missing.length, 'items:', missing.join(', '));
   return hits;
 }
 async function loadIcons(){
-  const KEY = 'icodex-icons-v2', DAY = 864e5;
+  const KEY = 'icodex-icons-v3', DAY = 864e5;
   try { const c = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (c && Date.now() - c.t < DAY && c.list) { applyIcons(c.list); return true; } } catch (e) {}
   try {
     const r = await fetch(ICON_API, {mode: 'cors'});
     if (!r.ok) throw new Error(r.status);
     const raw = await r.json();
-    const list = raw.map(x => ({name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
+    const list = raw.map(x => ({id: x.id, name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
       shop_image_webp: x.shop_image_webp, shop_image: x.shop_image, image_webp: x.image_webp, image: x.image}))
       .filter(x => x.shop_image_webp || x.shop_image || x.image_webp || x.image);
     applyIcons(list);
