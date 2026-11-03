@@ -296,16 +296,38 @@ footer a{color:var(--brass)}
 .vsc li p a{color:var(--fg);font-weight:600;text-decoration:none}
 .vsc li p a:hover{text-decoration:underline}
 .vsc .who{display:block;font:500 11px var(--mono);color:var(--weapon);margin:1px 0 2px}
-.vsbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:-4px}
-.vsbar label{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.vsbar select{font:14px var(--body);color:var(--fg);background:var(--raise);border:1px solid var(--line);border-radius:6px;padding:6px 8px;max-width:100%}
-.vsbar .vchip{display:inline-flex;align-items:center;gap:6px;background:var(--raise);border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 4px;font:500 12.5px var(--body);color:var(--fg);cursor:pointer}
-.vsbar .vchip .mono{width:22px;height:22px;font-size:9px;border-radius:50%}
-.vsbar .vchip i{font-style:normal;color:var(--muted);padding:0 6px 0 2px}
-.vsbar .vchip:hover i{color:var(--weapon)}
-.vsbar .vchip:focus-visible,.vsbar select:focus-visible,.vsbar .clr:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-.vsbar .clr{all:unset;cursor:pointer;font:500 12px var(--body);color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.vsbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:-4px}
+.vsbar .vlab{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--weapon)}
+.vslots{display:flex;gap:6px;flex-wrap:wrap}
+.vslot{all:unset;box-sizing:border-box;cursor:pointer;width:42px;height:42px;border-radius:6px;display:grid;place-items:center;position:relative;
+  border:1px dashed color-mix(in srgb,var(--weapon) 45%,var(--line));color:var(--muted);font:400 20px/1 var(--body);background:color-mix(in srgb,var(--weapon) 5%,transparent)}
+.vslot:hover{border-color:var(--weapon);color:var(--fg)}
+.vslot.full{border:1px solid color-mix(in srgb,var(--weapon) 70%,var(--line));background:var(--raise);box-shadow:0 0 0 1px color-mix(in srgb,var(--weapon) 30%,transparent)}
+.vslot .mono{width:100%;height:100%;border-radius:5px;font-size:12px}
+.vslot i{position:absolute;top:-6px;right:-6px;width:16px;height:16px;border-radius:50%;background:var(--weapon);color:#fff;font:700 11px/16px var(--body);text-align:center;font-style:normal;opacity:0;transition:opacity .12s}
+.vslot.full:hover i,.vslot.full:focus-visible i{opacity:1}
+.vslot:focus-visible,.vtile:focus-visible,.vsbar .clr:focus-visible,.btn-sm:focus-visible,#vsq:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.vsbar .clr{all:unset;cursor:pointer;font:500 12.5px var(--body);color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.vsbar .clr:hover{color:var(--fg)}
 .vsbar .hint{font-size:12px;color:var(--muted);flex-basis:100%}
+.vsgrid-wrap{flex-basis:100%;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:10px}
+.vsg-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#vsq{flex:1 1 180px;max-width:260px;padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--raise);color:var(--fg);font:14px var(--body)}
+.vsg-top .note{font:500 12px var(--mono);color:var(--muted)}
+.btn-sm{all:unset;cursor:pointer;margin-left:auto;font:600 12.5px var(--body);color:var(--brass-ink);background:var(--brass);border-radius:6px;padding:6px 14px}
+.vsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(68px,1fr));gap:6px}
+.vtile{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px 5px;border-radius:6px;
+  background:var(--raise);border:1px solid var(--line);min-width:0;transition:border-color .12s,transform .12s}
+.vtile .mono{width:44px;height:44px;border-radius:5px;font-size:14px}
+.vtile span{font:500 10.5px var(--body);color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.vtile:hover:not([disabled]){border-color:var(--weapon);transform:translateY(-1px)}
+.vtile.on{border-color:var(--weapon);box-shadow:0 0 0 1px var(--weapon) inset;background:color-mix(in srgb,var(--weapon) 12%,var(--raise))}
+.vtile.on span{color:var(--fg)}
+.vtile em{position:absolute;top:3px;right:3px;min-width:15px;height:15px;border-radius:3px;background:var(--weapon);color:#fff;font:700 10px/15px var(--mono);font-style:normal;text-align:center}
+.vtile em.you{background:var(--brass);color:var(--brass-ink);padding:0 3px;font-size:9px}
+.vtile[disabled]{cursor:not-allowed;opacity:.38}
+.vtile[disabled] .mono{filter:grayscale(1)}
+@media (max-width:520px){.vsgrid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr))}.vtile .mono{width:38px;height:38px}.vslot{width:38px;height:38px}}
 .items3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:900px){.items3{grid-template-columns:minmax(0,1fr)}}
 .ig{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
@@ -549,14 +571,26 @@ function counters(you, phase){
       const e=by.get(r[0]); if (!e.hits.some(x=>x.en===en&&x.ab===ab)) e.hits.push({en,ab}); } }
   return [...by.values()].sort((a,b)=>new Set(b.hits.map(x=>x.en)).size-new Set(a.hits.map(x=>x.en)).size||b.hits.length-a.hits.length);
 }
+let vsOpen=false, vsQ='';
 function vsBar(h){
-  const opts=PLAY.filter(x=>x.name!==h.name&&!VS.includes(x.name)).map(x=>`<option value="${esc(x.name)}">${esc(x.name)}</option>`).join('');
+  const slots=[0,1,2,3,4,5].map(i=>{ const n=VS[i];
+    return n?`<button type="button" class="vslot full" data-vsrm="${esc(n)}" data-fk="rm-${esc(n)}" aria-label="Remove ${esc(n)}" title="${esc(n)} (click to remove)">${heroMini(n)}<i aria-hidden="true">×</i></button>`
+            :`<button type="button" class="vslot" data-vsopen="1" data-fk="slot-${i}" aria-label="Add an enemy hero" aria-expanded="${vsOpen}">+</button>`; }).join('');
+  const f=vsQ.trim().toLowerCase();
+  const grid=vsOpen?`<div class="vsgrid-wrap" id="vspanel">
+      <div class="vsg-top"><input type="search" id="vsq" placeholder="Filter heroes" value="${esc(vsQ)}" aria-label="Filter heroes" data-fk="q">
+        <span class="note">${VS.length}/6 picked</span><button type="button" class="btn-sm" data-vsdone="1" data-fk="done">Done</button></div>
+      <div class="vsgrid" role="group" aria-label="Enemy heroes">${PLAY.filter(x=>!f||x.name.toLowerCase().includes(f)).map(x=>{
+        const me=x.name===h.name, on=VS.includes(x.name), full=VS.length>=6&&!on;
+        return `<button type="button" class="vtile${on?' on':''}" data-vstog="${esc(x.name)}" data-fk="t-${esc(x.name)}" aria-pressed="${on}" ${me||full?'disabled':''} title="${esc(x.name)}${me?' (you)':''}">
+          ${heroMini(x.name)}<span>${esc(x.name)}</span>${on?`<em>${VS.indexOf(x.name)+1}</em>`:''}${me?'<em class="you">You</em>':''}</button>`}).join('')}</div></div>`:'';
   return `<div class="vsbar" role="group" aria-label="Enemy lineup">
-    <label for="vsadd">Playing against</label>
-    ${VS.map(n=>`<button type="button" class="vchip" data-vsrm="${esc(n)}" aria-label="Remove ${esc(n)}">${heroMini(n)}${esc(n)}<i aria-hidden="true">×</i></button>`).join('')}
-    ${VS.length<6?`<select id="vsadd"><option value="">${VS.length?'Add another…':'Optional: pick enemy heroes…'}</option>${opts}</select>`:''}
-    ${VS.length?'<button type="button" class="clr" id="vsclr">Clear</button>':''}
-    <span class="hint">${VS.length?'Each phase now lists the items that answer what these heroes do to you.':'Add up to 6 enemies to see which items matter most against them in each phase.'}</span></div>`;
+    <span class="vlab">Playing against</span>
+    <div class="vslots">${slots}</div>
+    ${VS.length?'<button type="button" class="clr" id="vsclr" data-fk="clr">Clear</button>':''}
+    ${!vsOpen?`<button type="button" class="clr" data-vsopen="1" data-fk="open">${VS.length?'Edit lineup':'Choose enemy heroes'}</button>`:''}
+    <span class="hint">${VS.length?'Each phase now lists the items that answer what these heroes do to you.':'Optional: add up to 6 enemies to see which items matter most against them in each phase.'}</span>
+    ${grid}</div>`;
 }
 const heroMini = n => { const hh=HEROES.find(x=>x.name===n); return hh?`<span class="mono${PIC[hh.slug]?' pic':''}" style="${monoStyle(n)}" aria-hidden="true">${glyph(hh)}</span>`:''; };
 function phaseItems(h, key){
@@ -751,9 +785,15 @@ function renderHero(s){
 
 function go(s){ renderHero(s); try{history.replaceState(null,'','#'+s)}catch(_){}; window.codexPicked&&codexPicked(); }
 document.getElementById('list').addEventListener('click',e=>{const b=e.target.closest('button[data-s]'); if(b) go(b.dataset.s);});
-function rerenderVS(focusSel){ renderHero(state.cur); const el=document.getElementById(focusSel?'vsadd':'vsadd')||document.querySelector('.vsbar select,.vsbar button'); el&&el.focus({preventScroll:true}); }
-document.getElementById('dossier').addEventListener('change',e=>{ if(e.target.id==='vsadd'&&e.target.value){ VS.push(e.target.value); VS=VS.slice(0,6); saveVS(); rerenderVS(true); } });
-document.getElementById('dossier').addEventListener('click',e=>{ const rm=e.target.closest('[data-vsrm]'); if(rm){ VS=VS.filter(n=>n!==rm.dataset.vsrm); saveVS(); rerenderVS(); return; } if(e.target.id==='vsclr'){ VS=[]; saveVS(); rerenderVS(); return; } });
+function rerenderVS(fk){ const y=scrollY; renderHero(state.cur); scrollTo(0,y); const el=fk&&document.querySelector(`[data-fk="${CSS.escape(fk)}"]`)||document.querySelector('.vslot'); if(el){ el.focus({preventScroll:true}); if(el.id==='vsq') el.setSelectionRange(el.value.length,el.value.length); } }
+document.getElementById('dossier').addEventListener('input',e=>{ if(e.target.id==='vsq'){ vsQ=e.target.value; rerenderVS('q'); } });
+document.getElementById('dossier').addEventListener('keydown',e=>{ if(e.key==='Escape'&&vsOpen){ vsOpen=false; rerenderVS('open'); } });
+document.getElementById('dossier').addEventListener('click',e=>{
+  const t=e.target.closest('[data-vstog]'); if(t){ const n=t.dataset.vstog; VS=VS.includes(n)?VS.filter(x=>x!==n):VS.concat(n).slice(0,6); saveVS(); rerenderVS('t-'+n); return; }
+  const rm=e.target.closest('[data-vsrm]'); if(rm){ VS=VS.filter(n=>n!==rm.dataset.vsrm); saveVS(); rerenderVS(vsOpen?'q':'open'); return; }
+  if(e.target.closest('[data-vsopen]')){ vsOpen=true; rerenderVS('q'); return; }
+  if(e.target.closest('[data-vsdone]')){ vsOpen=false; vsQ=''; rerenderVS('open'); return; }
+  if(e.target.id==='vsclr'){ VS=[]; saveVS(); rerenderVS(vsOpen?'q':'open'); return; } });
 document.getElementById('dossier').addEventListener('click',e=>{const w=e.target.closest('[data-duowin]'); if(w){ duoWin=w.dataset.duowin; const h=HEROES.find(x=>x.slug===state.cur); document.getElementById('lanebox').innerHTML=laneBlock(h); return; } const b=e.target.closest('button.hchip'); if(b) go(b.dataset.s);});
 function refilter(){ save(); const f=filtered(); if(f.length&&!f.some(x=>x.slug===state.cur)) renderHero(f[0].slug); else renderList(); }
 document.getElementById('q').addEventListener('input',e=>{state.q=e.target.value.trim(); refilter();});
