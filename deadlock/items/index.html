@@ -205,6 +205,14 @@ footer a{color:var(--brass)}
 .kind.passive{color:var(--vital);border:1px solid color-mix(in srgb,var(--vital) 50%,transparent)}
 .kind.toggle{color:var(--weapon);border:1px solid color-mix(in srgb,var(--weapon) 50%,transparent)}
 .kind.stat{color:var(--muted);border:1px solid var(--line)}
+.buyers{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-4px 0 18px}
+.buyers .bl{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.buyers a{display:inline-flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--muted);font:500 10.5px var(--mono);width:44px}
+.buyers a:hover{color:var(--fg)}
+.buyers a:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px}
+.buyers .hm{width:36px;height:36px;border-radius:6px;display:grid;place-items:center;background:var(--raise);box-shadow:inset 0 0 0 1px var(--line);font:700 12px var(--body);color:var(--fg);overflow:hidden}
+.buyers .hm img{width:100%;height:100%;object-fit:contain;display:block}
+.buyers .bnote{font-size:12px;color:var(--muted);flex-basis:100%}
 .peers{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
 .peer{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;min-width:0}
 .peer:hover{background:var(--raise)}
@@ -326,6 +334,59 @@ function iconFail(img){
   if (rest.length){ img.dataset.alt=JSON.stringify(rest.slice(1)); img.src=rest[0]; return; }
   img.replaceWith(document.createTextNode(img.dataset.fb||''));
 }
+const ITEMID = {};
+/* Heroes who buy each item, live from deadlock-api: item purchases bucketed by hero, divided by that hero's matches. */
+const HEROES = ["Abrams", "Apollo", "Baba", "Bebop", "Billy", "Calico", "Celeste", "Deadman Danny", "The Doorman", "Drifter", "Dynamo", "Graves", "Grey Talon", "Haze", "Holliday", "Infernus", "Ivy", "Kelvin", "Lady Geist", "Lash", "McGinnis", "Mina", "Mirage", "Mo & Krill", "Nurse Harrow", "Paige", "Paradox", "Pocket", "Rat King", "Rem", "Seven", "Shiv", "Silver", "Sinclair", "Solomon", "Venator", "Victor", "Vindicta", "Violet", "Viscous", "Vyper", "Warden", "Wraith", "Yamato"];
+const hslug = s => s.toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const HPIC = {}, HID = {}, HBYID = {};
+const hnorm = s => String(s||'').toLowerCase().replace(/&/g,'and').replace(/^the\s+/,'').replace(/[^a-z0-9]/g,'');
+const hinit = n => { const w=n.replace(/^The /,'').replace('&','').split(/\s+/).filter(Boolean); return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase(); };
+async function loadHeroPics(){
+  const KEY='codex-pics-v2', DAY=864e5; let list=null;
+  try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<DAY && c.list) list=c.list; } catch(e){}
+  if (!list) try {
+    const r=await fetch('https://api.deadlock-api.com/v1/assets/heroes?language=english',{mode:'cors'}); if(!r.ok) throw new Error(r.status);
+    list=(await r.json()).map(x=>({id:x.id,name:x.name,sel:!!x.player_selectable&&!x.disabled,mm_webp:x.images&&x.images.minimap_image_webp,mm:x.images&&x.images.minimap_image}));
+    try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), list})); } catch(e){}
+  } catch(e) { console.info('[Item Codex] hero icons unavailable:', e.message||e); return false; }
+  list=list.filter(x=>x.name).sort((a,b)=>(b.sel?1:0)-(a.sel?1:0));
+  const by=new Map(); for(const x of list){ const k=hnorm(x.name); if(!by.has(k)) by.set(k,x); }
+  for(const h of HEROES){ const m=by.get(hnorm(h)); if(!m) continue; if(m.mm_webp||m.mm) HPIC[h]=m.mm_webp||m.mm; if(m.id!=null){ HID[h]=m.id; HBYID[m.id]=h; } }
+  return true;
+}
+let BUY=null, BUYSTATE='idle';
+async function loadBuyers(){
+  if (BUYSTATE!=='idle') return; BUYSTATE='loading';
+  const KEY='icodex-buyers-v1', TTL=12*3600e3;
+  try { const c=JSON.parse(localStorage.getItem(KEY)||'null'); if (c && Date.now()-c.t<TTL && c.v) { BUY=c.v; BUYSTATE='ok'; return; } } catch(e){}
+  try {
+    const since=Math.floor(Date.now()/1000)-30*86400, base='https://api.deadlock-api.com/v1/analytics/';
+    const [rows, solo] = await Promise.all([
+      fetch(`${base}item-stats?bucket=hero&min_unix_timestamp=${since}`).then(r=>{ if(!r.ok) throw new Error('item-stats HTTP '+r.status); return r.json(); }),
+      fetch(`${base}hero-stats?min_unix_timestamp=${since}`).then(r=>r.ok?r.json():[]).catch(()=>[]),
+    ]);
+    if (!Array.isArray(rows) || !rows.length || rows[0].item_id==null || rows[0].bucket==null) throw new Error('unexpected item-stats shape');
+    const hm={}; for (const s of solo) if (s.hero_id!=null) hm[s.hero_id]=s.matches||((s.wins||0)+(s.losses||0));
+    const v={};
+    for (const r of rows) { const n=r.matches!=null?r.matches:((r.wins||0)+(r.losses||0)); if(!n) continue;
+      (v[r.item_id]=v[r.item_id]||[]).push([Number(r.bucket), n, hm[r.bucket]||0]); }
+    BUY=v; BUYSTATE='ok';
+    try { localStorage.setItem(KEY, JSON.stringify({t:Date.now(), v})); } catch(e){}
+  } catch(e) { BUYSTATE='fail'; console.info('[Item Codex] buyer data unavailable:', e.message||e); }
+}
+function buyersHtml(i){
+  if (BUYSTATE==='fail') return '';
+  if (BUYSTATE!=='ok' || !Object.keys(HBYID).length) return `<span class="bl">Who buys it</span><span class="bnote" style="flex-basis:auto">Loading…</span>`;
+  const id=ITEMID[i.slug], rows=(id!=null&&BUY[id])||[];
+  const withRate=rows.some(r=>r[2]>0);
+  const list=rows.filter(r=>HBYID[r[0]] && (!withRate || r[2]>=200)).map(([h,n,m])=>({h:HBYID[h], n, rate:m?n/m:0}))
+    .sort((a,b)=>withRate?b.rate-a.rate:b.n-a.n).slice(0,8);
+  if (!list.length) return '';
+  return `<span class="bl">Who buys it</span>${list.map(x=>`<a href="https://alex-barbosa.com/deadlock/#${hslug(x.h)}" aria-label="${esc(x.h)}${withRate?`, ${Math.round(x.rate*100)}%`:''}" title="${esc(x.h)}${withRate?`: bought in ${Math.round(x.rate*100)}% of their matches`:''}">
+      <span class="hm">${HPIC[x.h]?`<img src="${esc(HPIC[x.h])}" alt="" decoding="async" onerror="this.replaceWith(document.createTextNode('${hinit(x.h)}'))">`:hinit(x.h)}</span>${withRate?Math.round(x.rate*100)+'%':''}</a>`).join('')}
+    <span class="bnote">${withRate?'Share of each hero\'s matches where they bought it':'Most purchases by hero'}, last 30 days of matches.</span>`;
+}
+function paintBuyers(){ const el=document.getElementById('buyers'); const i=ITEMS.find(x=>x.slug===state.cur); if(el&&i){ const h=buyersHtml(i); el.innerHTML=h; el.hidden=!h; } }
 function applyIcons(list){
   const shop = list.filter(x => x && x.name && (x.shop_image_webp || x.shop_image || x.image_webp || x.image)
     && (x.type === 'upgrade' || x.item_slot_type));
@@ -343,21 +404,21 @@ function applyIcons(list){
     let m = c ? best(c, i) : null;
     if (!m) m = shop.find(x => { const k = norm(x.name);
       return (!x.item_slot_type || x.item_slot_type === i.cat) && k.length > 4 && (k.startsWith(n) || n.startsWith(k)); });
-    if (m) { ICON[i.slug] = urls(m); hits++; } else missing.push(i.name);
+    if (m) { ICON[i.slug] = urls(m); if (m.id != null) ITEMID[i.slug] = m.id; hits++; } else missing.push(i.name);
   }
   document.documentElement.dataset.icons = hits;
   if (missing.length) console.info('[Item Codex] no icon for', missing.length, 'items:', missing.join(', '));
   return hits;
 }
 async function loadIcons(){
-  const KEY = 'icodex-icons-v2', DAY = 864e5;
+  const KEY = 'icodex-icons-v3', DAY = 864e5;
   try { const c = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (c && Date.now() - c.t < DAY && c.list) { applyIcons(c.list); return true; } } catch (e) {}
   try {
     const r = await fetch(ICON_API, {mode: 'cors'});
     if (!r.ok) throw new Error(r.status);
     const raw = await r.json();
-    const list = raw.map(x => ({name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
+    const list = raw.map(x => ({id: x.id, name: x.name, type: x.type, item_slot_type: x.item_slot_type, item_tier: x.item_tier, shopable: x.shopable, disabled: x.disabled,
       shop_image_webp: x.shop_image_webp, shop_image: x.shop_image, image_webp: x.image_webp, image: x.image}))
       .filter(x => x.shop_image_webp || x.shop_image || x.image_webp || x.image);
     applyIcons(list);
@@ -444,6 +505,7 @@ function renderItem(s){
           <span class="tag">${KIND[i.kind]}</span>
         </div></div>
     </section>
+    <div class="buyers" id="buyers" aria-label="Heroes who often buy this item">${buyersHtml(i)}</div>
     <div class="sec-h">Stats</div>
     <ul class="statlist">${i.stats.map(x=>`<li>${hl(x)}</li>`).join('')}</ul>
     <div class="sec-h">Effect</div>
@@ -502,7 +564,7 @@ document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.i
 const initial=(location.hash||'').slice(1);
 const first=filtered()[0]||ITEMS[0];
 renderItem(ITEMS.some(i=>i.slug===initial)?initial:first.slug);
-loadIcons().then(ok=>{ if(ok && Object.keys(ICON).length){ renderItem(state.cur); renderDota(); } });
+loadIcons().then(ok=>{ if(ok && Object.keys(ICON).length){ renderItem(state.cur); renderDota(); } return Promise.all([loadHeroPics(), loadBuyers()]); }).then(paintBuyers);
 </script>
 <script>
 /* Phone layout: sticky search bar + Browse button; the list opens as a sheet under the bar. */
